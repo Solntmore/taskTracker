@@ -20,92 +20,56 @@ public class Main {
                     System.out.println(manager.showAllEpic());
                     System.out.println(manager.showAllSubtasks());
                     break;
+
                 case "2":
                     System.out.println(manager.deleteAllTasks());
                     System.out.println(manager.deleteAllEpics());
                     System.out.println(manager.deleteAllSubtasks());
                     break;
+
                 case "3":
-                    System.out.println("Введите ID задачи: ");
-                    String userInput = scanner.nextLine();
-                    System.out.println(manager.showTaskById(userInput));
-                    System.out.println(manager.showEpicById(userInput));
-                    System.out.println(manager.showSubtaskById(userInput));
+                    System.out.println(manager.showTaskById(1));
+                    System.out.println(manager.showEpicById(3));
+                    System.out.println(manager.showSubtaskById(1));
                     break;
+
                 case "4":
-                    System.out.println("Введите название задачи:");
-                    String name = scanner.nextLine();
-
-                    System.out.println("Введите описание задачи:");
-                    String description = scanner.nextLine();
-
-                    System.out.println("1 - обычная задача; 2 - эпик с подзадачами.");
-                    String number = scanner.nextLine();
-
-                    if (number.equals("1")) {
-                        System.out.println(manager.createTask(name, description));
-                    } else if (number.equals("2")) {
-                        System.out.println(manager.createEpic(name, description));
-                        while (true) {
-                            System.out.println("1 - добавить подзадачу, 2 - в главное меню");
-                            userInput = scanner.nextLine();
-                            if (userInput.equals("1")) {
-                                System.out.println("Введите название задачи:");
-                                String subTaskName = scanner.nextLine();
-
-                                System.out.println("Введите описание задачи:");
-                                String subTaskDescription = scanner.nextLine();
-
-                                System.out.println(manager.createSubtask(subTaskName, subTaskDescription));
-                            } else if(userInput.equals("2")) {
-                                break;
-                            } else {
-                                System.out.println("Такой команды нет, попробуйте еще раз.");
-                            }
-                        }
-                    } else {
-                        System.out.println("Такой команды нет, попробуйте еще раз.");
-                    }
+                    Task task = new Task("Задача-1", "описание", 0, Manager.Status.NEW);
+                    manager.createTask(task);
+                    task = new Task("Задача-2", "описание", 0, Manager.Status.NEW);
+                    manager.createTask(task);
+                    Epic epic = new Epic("Эпик-1", "описание", 0, Manager.Status.NEW);
+                    manager.createEpic(epic);
+                    Subtask subtask = new Subtask("Подзадача эпика-1", "описание", 3, Manager.Status.NEW, 0);
+                    manager.createSubtask(subtask);
+                    subtask = new Subtask("Подзадача эпика-2", "описание", 3, Manager.Status.NEW, 0);
+                    manager.createSubtask(subtask);
                     break;
+
                 case "5":
-                    System.out.println("Вы хотите удалить: 1 - обычную задачу, 2 - эпик, 3.");
-                    userInput = scanner.nextLine();
+                    System.out.println("Вы хотите удалить: 1 - обычную задачу, 2 - эпик, 3 - подзадачу.");
+                    String userInput = scanner.nextLine();
                     if (userInput.equals("1")) {
-                        System.out.println("Введите ID:");
-                        String id = scanner.nextLine();
-                        manager.deleteTaskById(id);
-
+                        manager.deleteTaskById(1);
                     } else if (userInput.equals("2")) {
-                        System.out.println("Введите ID:");
-                        String id = scanner.nextLine();
-                        manager.deleteEpicById(id);
-
+                        manager.deleteEpicById(3);
+                    } else if (userInput.equals("3")) {
+                        manager.deleteSubtaskById(4);
                     } else {
                         System.out.println("Такой команды нет.");
                     }
                     break;
+
                 case "6":
-                    System.out.println("Введите ID задачи: ");
-                    userInput = scanner.nextLine();
-                    manager.showSubtasksByEpicId(userInput);
+                    System.out.println(manager.showSubtasksByEpicId(3));
                     break;
+
                 case "7":
-                    System.out.println("Вы хотите обновить статус: 1 - задачи, любая команда - подзадачи?");
-                    userInput = scanner.nextLine();
-                    if(userInput.equals("1")) {
-                        System.out.println("Введите ID задачи: ");
-                        userInput = scanner.nextLine();
-                        System.out.println("Статус: любая команда - STATUS_IN_PROGRESS, 1 - STATUS_DONE");
-                        String status = scanner.nextLine();
-                        manager.updateTask(userInput, status);
-                    } else {
-                        System.out.println("Введите ID задачи: ");
-                        userInput = scanner.nextLine();
-                        System.out.println("Статус: любая команда - STATUS_IN_PROGRESS, 1 - STATUS_DONE");
-                        String status = scanner.nextLine();
-                        manager.updateSubtask(userInput, status);
-                    }
+                    manager.updateTask(1, "1");
+                    manager.updateSubtask(4, "1");
+                    manager.updateSubtask(5, "1");
                     break;
+
                 case "0":
 
                     break label;

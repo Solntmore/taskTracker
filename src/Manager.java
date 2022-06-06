@@ -3,267 +3,245 @@ import java.util.HashMap;
 import java.util.Objects;
 
 public class Manager {
-    HashMap<Integer, Task> taskManager = new HashMap<>();
-    HashMap<Integer, Subtask> subtaskManager = new HashMap<>();
-    HashMap<Integer, Epic> epicManager = new HashMap<>();
-   /* Hash<Task> taskList;*/
+    HashMap<Integer, Task> taskMap = new HashMap<>();
+    HashMap<Integer, Subtask> subtaskMap = new HashMap<>();
+    HashMap<Integer, Epic> epicMap = new HashMap<>();
     ArrayList<Subtask> subtaskList;
-   HashMap<Integer, Subtask> subtaskWithEpicId;
+    HashMap<Integer, Subtask> subtaskWithEpicId;
 
-
-    private static final String STATUS_NEW = "NEW";
-    private static final String STATUS_IN_PROGRESS = "IN_PROGRESS";
-    private static final String STATUS_DONE = "DONE";
+    /* Не сделал инкрементацию в методе getCounter, так как в некоторых методах я просто обращаюсь к значению
+     taskCounter без цели дальнейшего его изменения(например, при удаления Эпика, чтобы удалились все его подзадачи
+      и при выдаче всех подзадач эпика */
     private int taskCounter = 0;
-    private int subtaskCounter = 0;
 
-    public int getTaskCounter() {
-        return taskCounter;
+    public enum Status {
+        NEW, IN_PROGRESS, DONE
     }
 
-    public void setTaskCounter(int counter) {
-        this.taskCounter = counter;
+    @Override
+    public String toString() {
+        return "Manager{" +
+                "taskMap=" + taskMap +
+                ", SubtaskMap=" + subtaskMap +
+                ", EpicMap=" + epicMap +
+                '}';
     }
 
-    public int getSubtaskCounter() {
-        return subtaskCounter;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Manager manager = (Manager) o;
+        return taskCounter == manager.taskCounter && Objects.equals(taskMap, manager.taskMap) &&
+                Objects.equals(subtaskMap, manager.subtaskMap) &&
+                Objects.equals(epicMap, manager.epicMap);
     }
 
-    public void setSubtaskCounter(int subtaskCounter) {
-        this.subtaskCounter = subtaskCounter;
+    @Override
+    public int hashCode() {
+        return Objects.hash(taskMap, subtaskMap, epicMap, taskCounter);
     }
 
-    // использую public, так как вызываю этот метод для проверки работоспособности в классе main.
-    Object createTask(String name, String description) {
+    Object createTask(Task task) {
         Object newTask;
-        int number = getTaskCounter();
-        setTaskCounter(number + 1);
-        int newNumber = getTaskCounter();
-        Task task = new Task(name, description, newNumber, STATUS_NEW);
-        taskManager.put(newNumber, task);
+        setTaskCounter(getTaskCounter() + 1);
+        task.setMainTaskId(getTaskCounter());
+        taskMap.put(task.mainTaskId, task);
         newTask = task;
         return newTask;
     }
 
-    Object createEpic(String name, String description) {
+    Object createEpic(Epic epic) {
         Object newEpic;
-        int number = getTaskCounter();
-        setTaskCounter(number + 1);
-        int newNumber = getTaskCounter();
-        Epic epic = new Epic(name, description, newNumber, STATUS_NEW);
-        epicManager.put(newNumber, epic);
+        setTaskCounter(getTaskCounter() + 1);
+        epic.setMainTaskId(getTaskCounter());
+        epicMap.put(epic.mainTaskId, epic);
         newEpic = epic;
         return newEpic;
     }
 
-    Object createSubtask(String subTaskName, String subTaskDescription) {
+    Object createSubtask(Subtask subtask) {
         Object newSubtask;
-        int number = getTaskCounter();
-        int secondNumber = getSubtaskCounter();
-        setSubtaskCounter(secondNumber + 1);
-        secondNumber = getSubtaskCounter();
-        Subtask subtask = new Subtask(subTaskName, subTaskDescription, number, STATUS_NEW, secondNumber);
-        subtaskManager.put(secondNumber, subtask);
+        setTaskCounter(getTaskCounter() + 1);
+        subtask.setSubtaskId(getTaskCounter());
+        subtaskMap.put(subtask.getSubtaskId(), subtask);
         newSubtask = subtask;
         return newSubtask;
     }
 
 
     public HashMap<Integer, Task> showAllTasks() {
-        return taskManager;
+        return taskMap;
     }
 
     public HashMap<Integer, Epic> showAllEpic() {
-        return epicManager;
+        return epicMap;
     }
 
     public HashMap<Integer, Subtask> showAllSubtasks() {
-        return subtaskManager;
+        return subtaskMap;
     }
 
     public HashMap<Integer, Task> deleteAllTasks() {
-        taskManager.clear();
-        return taskManager;
+        taskMap.clear();
+        return taskMap;
     }
 
-    public HashMap<Integer, Epic> deleteAllEpics(){
-        epicManager.clear();
-        return epicManager;
+    public HashMap<Integer, Epic> deleteAllEpics() {
+        epicMap.clear();
+        return epicMap;
 
     }
 
     public HashMap<Integer, Subtask> deleteAllSubtasks() {
-        subtaskManager.clear();
-        return subtaskManager;
+        subtaskMap.clear();
+        return subtaskMap;
     }
 
-    public HashMap<Integer, Task> deleteTaskById(String id) {
-        try {
-            int taskId = Integer.parseInt(id);
-            taskManager.remove(taskId);
-
-        } catch (NullPointerException e) {
-            System.out.println("Задачи с таким ID нет, попробуйте еще раз.");
-        }
-        return taskManager;
+    public HashMap<Integer, Task> deleteTaskById(int id) {
+        taskMap.remove(id);
+        return taskMap;
     }
 
-    public HashMap<Integer, Epic> deleteEpicById(String id) {
-        try {
-            int epicId = Integer.parseInt(id);
-            epicManager.remove(epicId);
-            for (int i = 1; i <= getSubtaskCounter(); i++) {
-                if (epicId == subtaskManager.get(i).mainTaskId) {
-                    subtaskManager.remove(i);
-                }
-            }
-        } catch(NullPointerException e) {
-                System.out.println("Задачи с таким ID нет, попробуйте еще раз.");
-            }
-        return epicManager;
-        }
-
-    public HashMap<Integer, Subtask> deleteSubtaskById(String id)  {
-        int subtaskId = Integer.parseInt(id);
-        for (int i = 1; i <= getSubtaskCounter(); i++) {
-            if (subtaskId == subtaskManager.get(i).mainTaskId) {
-                subtaskManager.remove(i);
+    public HashMap<Integer, Epic> deleteEpicById(int id) {
+        epicMap.remove(id);
+        for (int i = 1; i <= getTaskCounter(); i++) {
+            if (id == subtaskMap.get(i).getMainTaskId()) {
+                subtaskMap.remove(i);
             }
         }
-        return subtaskManager;
+        return epicMap;
     }
 
-    Object showTaskById(String userInput) {
+    public HashMap<Integer, Subtask> deleteSubtaskById(int id) {
+        subtaskMap.remove(id);
+        return subtaskMap;
+    }
+
+    Object showTaskById(int id) {
         Object task;
-        int taskId = Integer.parseInt(userInput);
-        task = taskManager.get(taskId);
+        task = taskMap.get(id);
         return task;
     }
 
-    Object showEpicById(String userInput) {
+    Object showEpicById(int id) {
         Object epic;
-        int epicId = Integer.parseInt(userInput);
-        epic = epicManager.get(epicId);
+        epic = epicMap.get(id);
         return epic;
     }
 
-    Object showSubtaskById(String userInput) {
+    Object showSubtaskById(int id) {
         Object subtask;
-        int subtaskId = Integer.parseInt(userInput);
-        subtask = subtaskManager.get(subtaskId);
+        subtask = subtaskMap.get(id);
         return subtask;
     }
 
-
-
-    public HashMap<Integer, Subtask> showSubtasksByEpicId(String userInput) {
+    public HashMap<Integer, Subtask> showSubtasksByEpicId(int id) {
         subtaskWithEpicId = new HashMap<>();
-        int taskId = Integer.parseInt(userInput);
-        for (int i = 1; i <= getSubtaskCounter() + getTaskCounter(); i++) {
-                    if (subtaskManager.containsKey(i) && taskId == subtaskManager.get(i).mainTaskId) {
-                        subtaskWithEpicId.put(i, subtaskManager.get(i));
+        for (int i = 1; i <= getTaskCounter() + getTaskCounter(); i++) {
+            if (subtaskMap.containsKey(i) && id == subtaskMap.get(i).getMainTaskId()) {
+                subtaskWithEpicId.put(i, subtaskMap.get(i));
 
-                }
             }
-        return subtaskWithEpicId;
         }
+        return subtaskWithEpicId;
+    }
 
-    Object updateTask(String userInput, String status) {
+    Object updateTask(int id, String status) {
         Object updatedTask;
-        int taskId = Integer.parseInt(userInput);
         Task task;
         if (status.equals("1")) {
-            task = new Task(taskManager.get(taskId).name, taskManager.get(taskId).description,
-                    taskManager.get(taskId).mainTaskId, STATUS_DONE);
+            task = new Task(taskMap.get(id).getName(), taskMap.get(id).getDescription(),
+                    taskMap.get(id).getMainTaskId(), Status.DONE);
         } else {
-            task = new Task(taskManager.get(taskId).name, taskManager.get(taskId).description,
-                    taskManager.get(taskId).mainTaskId, STATUS_IN_PROGRESS);
+            task = new Task(taskMap.get(id).getName(), taskMap.get(id).getDescription(),
+                    taskMap.get(id).getMainTaskId(), Status.IN_PROGRESS);
         }
-        taskManager.put(taskManager.get(taskId).mainTaskId, task);
-        updatedTask = taskManager.get(taskId);
+        taskMap.put(taskMap.get(id).getMainTaskId(), task);
+        updatedTask = taskMap.get(id);
         return updatedTask;
     }
 
-    Object updateSubtask(String userInput, String status) {
+    Object updateSubtask(int id, String status) {
         Object updatedSubtask;
-        int subtaskId = Integer.parseInt(userInput);
-        int mainTaskId = subtaskManager.get(subtaskId).mainTaskId;
+        int mainTaskId = subtaskMap.get(id).getMainTaskId();
         Subtask subtask;
         if (status.equals("1")) {
-            subtask = new Subtask(subtaskManager.get(subtaskId).name, subtaskManager.get(subtaskId).description,
-                    subtaskManager.get(subtaskId).mainTaskId, STATUS_DONE, subtaskManager.get(subtaskId).subtaskID);
+            subtask = new Subtask(subtaskMap.get(id).getName(), subtaskMap.get(id).getDescription(),
+                    subtaskMap.get(id).getMainTaskId(), Status.DONE, subtaskMap.get(id).getSubtaskId());
         } else {
-            subtask = new Subtask(subtaskManager.get(subtaskId).name, subtaskManager.get(subtaskId).description,
-                    subtaskManager.get(subtaskId).mainTaskId, STATUS_IN_PROGRESS, subtaskManager.get(subtaskId).subtaskID);
+            subtask = new Subtask(subtaskMap.get(id).getName(), subtaskMap.get(id).getDescription(),
+                    subtaskMap.get(id).getMainTaskId(), Status.IN_PROGRESS,
+                    subtaskMap.get(id).getSubtaskId());
         }
-        subtaskManager.put(subtaskManager.get(subtaskId).subtaskID, subtask);
-        updatedSubtask = subtaskManager.get(subtaskId);
+        subtaskMap.put(subtaskMap.get(id).getSubtaskId(), subtask);
+        updatedSubtask = subtaskMap.get(id);
         updateEpic(mainTaskId);
         return updatedSubtask;
     }
 
-    private Object updateEpic(int mainTaskId){
+    /*не закрываю к методам проверки наличия доступ, так как мне кажется логично вызывать их первыми при вводе id во
+    фронт-части, и в случает значения true вызывать метод удаления, а в случае false не вызывать*/
+
+    boolean taskMapContainsId(int id) {
+        return taskMap.containsKey(id);
+    }
+
+    boolean epicMapContainsId(int id) {
+        return epicMap.containsKey(id);
+    }
+
+    boolean subtaskMapContainsId(int id) {
+        return subtaskMap.containsKey(id);
+    }
+
+    private Object updateEpic(int mainTaskId) {
         Object updatedEpic;
         subtaskList = new ArrayList<>();
         int newStatus = 0;
         int inProgress = 0;
         int done = 0;
 
-        for (int i = 1; i <= getSubtaskCounter() + getTaskCounter(); i++) {
-            if (subtaskManager.containsKey(i) && mainTaskId == subtaskManager.get(i).mainTaskId) {
-                subtaskList.add(subtaskManager.get(i));
+        for (int i = 1; i <= getTaskCounter(); i++) {
+            if (subtaskMap.containsKey(i) && mainTaskId == subtaskMap.get(i).getMainTaskId()) {
+                subtaskList.add(subtaskMap.get(i));
             }
             for (Subtask subtask : subtaskList) {
-                String status = subtask.status;
-                if (status.equals(STATUS_NEW)) {
+                Status status = subtask.getStatus();
+                if (status.equals(Status.NEW)) {
                     newStatus += 1;
-                } else if (status.equals(STATUS_IN_PROGRESS)) {
+                } else if (status.equals(Status.IN_PROGRESS)) {
                     inProgress += 1;
                 } else {
                     done += 1;
                 }
             }
         }
-        if(inProgress == 0 && newStatus == 0 && done > 0) {
-            Epic epic = new Epic(epicManager.get(mainTaskId).name, epicManager.get(mainTaskId).description,
-                    epicManager.get(mainTaskId).mainTaskId, STATUS_DONE);
-            epicManager.put(epicManager.get(mainTaskId).mainTaskId, epic);
-        } else if(inProgress > 0) {
-            Epic epic = new Epic(epicManager.get(mainTaskId).name, epicManager.get(mainTaskId).description,
-                    epicManager.get(mainTaskId).mainTaskId, STATUS_IN_PROGRESS);
-            epicManager.put(epicManager.get(mainTaskId).mainTaskId, epic);
+        if (inProgress == 0 && newStatus == 0 && done > 0) {
+            Epic epic = new Epic(epicMap.get(mainTaskId).getName(), epicMap.get(mainTaskId).getDescription(),
+                    epicMap.get(mainTaskId).getMainTaskId(), Status.DONE);
+            epicMap.put(epicMap.get(mainTaskId).getMainTaskId(), epic);
+        } else if (inProgress > 0) {
+            Epic epic = new Epic(epicMap.get(mainTaskId).getName(), epicMap.get(mainTaskId).getDescription(),
+                    epicMap.get(mainTaskId).getMainTaskId(), Status.IN_PROGRESS);
+            epicMap.put(epicMap.get(mainTaskId).getMainTaskId(), epic);
         } else {
-            Epic epic = new Epic(epicManager.get(mainTaskId).name, epicManager.get(mainTaskId).description,
-                    epicManager.get(mainTaskId).mainTaskId, STATUS_NEW);
-            epicManager.put(epicManager.get(mainTaskId).mainTaskId, epic);
+            Epic epic = new Epic(epicMap.get(mainTaskId).getName(), epicMap.get(mainTaskId).getDescription(),
+                    epicMap.get(mainTaskId).getMainTaskId(), Status.NEW);
+            epicMap.put(epicMap.get(mainTaskId).getMainTaskId(), epic);
         }
-        updatedEpic = taskManager.get(mainTaskId);
+        updatedEpic = taskMap.get(mainTaskId);
         return updatedEpic;
     }
 
-        @Override
-        public String toString () {
-            return "Manager{" +
-                    "taskManager=" + taskManager +
-                    ", SubtaskManager=" + subtaskManager +
-                    ", EpicManager=" + epicManager +
-                    '}';
-        }
+    private int getTaskCounter() {
+        return taskCounter;
+    }
 
-        @Override
-        public boolean equals (Object o){
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Manager manager = (Manager) o;
-            return taskCounter == manager.taskCounter && Objects.equals(taskManager, manager.taskManager) &&
-                    Objects.equals(subtaskManager, manager.subtaskManager) &&
-                    Objects.equals(epicManager, manager.epicManager);
-        }
+    private void setTaskCounter(int counter) {
+        this.taskCounter = counter;
+    }
 
-        @Override
-        public int hashCode () {
-            return Objects.hash(taskManager, subtaskManager, epicManager, taskCounter);
-        }
 
 }
 

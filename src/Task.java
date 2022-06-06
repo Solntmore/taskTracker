@@ -1,12 +1,12 @@
 import java.util.Objects;
 
 public class Task {
-    public String name;
-    public String description;
-    public int mainTaskId;
-    protected String status;
+    protected String name;
+    protected String description;
+    protected int mainTaskId;
+    protected Manager.Status status;
 
-    public Task(String name, String description, int mainTaskId, String status) {
+    public Task(String name, String description, int mainTaskId, Manager.Status status) {
         this.name = name;
         this.description = description;
         this.mainTaskId = mainTaskId;
@@ -35,43 +35,37 @@ public class Task {
                 " статус задачи: " + status +
                 '.';
     }
-}
 
-class Subtask extends Task {
-    public int subtaskID;
-
-    public Subtask(String name, String description, int mainTaskId, String status, int subtaskID) {
-        super(name, description, mainTaskId, status);
-        this.subtaskID = subtaskID;
+    public Manager.Status getStatus() {
+        return status;
     }
 
-    @Override
-    public String toString() {
-        return "Название задачи: " + name + '\'' +
-                " описание задачи: " + description + '\'' +
-                " ID основной задачи: " + mainTaskId + '\'' +
-                " ID подзадачи: " + subtaskID + " статус задачи: "
-                + status + '.';
+    public void setStatus(Manager.Status status) {
+        this.status = status;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-        Subtask subtask = (Subtask) o;
-        return subtaskID == subtask.subtaskID;
+    public String getName() {
+        return name;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), subtaskID);
+    public void setName(String name) {
+        this.name = name;
     }
-}
 
-class Epic extends Task {
+    public String getDescription() {
+        return description;
+    }
 
-    public Epic(String name, String description, int mainTaskId, String status) {
-        super(name, description, mainTaskId, status);
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public int getMainTaskId() {
+        return mainTaskId;
+    }
+
+    public void setMainTaskId(int mainTaskId) {
+        this.mainTaskId = mainTaskId;
     }
 }
+
