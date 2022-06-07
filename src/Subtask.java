@@ -1,19 +1,20 @@
 import java.util.Objects;
 
 class Subtask extends Task {
-    public int subtaskId;
+    public int epicId;
 
-    public Subtask(String name, String description, int mainTaskId, Manager.Status status, int subtaskID) {
+    public Subtask(String name, String description, int epicId, Status status, int mainTaskId) {
         super(name, description, mainTaskId, status);
-        this.subtaskId = subtaskID;
+        this.epicId = epicId;
     }
+
 
     @Override
     public String toString() {
         return "Название задачи: " + name + '\'' +
                 " описание задачи: " + description + '\'' +
-                " ID основной задачи: " + mainTaskId + '\'' +
-                " ID подзадачи: " + subtaskId + " статус задачи: "
+                " ID основной задачи: " + epicId + '\'' +
+                " ID подзадачи: " + mainTaskId + " статус задачи: "
                 + status + '.';
     }
 
@@ -23,20 +24,21 @@ class Subtask extends Task {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         Subtask subtask = (Subtask) o;
-        return subtaskId == subtask.subtaskId;
+        return mainTaskId == subtask.mainTaskId;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), subtaskId);
+        return Objects.hash(super.hashCode(), mainTaskId);
     }
 
-    public int getSubtaskId() {
-        return subtaskId;
+
+    public int getEpicId() {
+        return epicId;
     }
 
-    public void setSubtaskId(int subtaskID) {
-        this.subtaskId = subtaskID;
+    public void setEpicId(int epicId) {
+        this.epicId = epicId;
     }
 }
 

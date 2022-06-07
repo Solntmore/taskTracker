@@ -4,13 +4,17 @@ public class Task {
     protected String name;
     protected String description;
     protected int mainTaskId;
-    protected Manager.Status status;
+    protected Status status;
 
-    public Task(String name, String description, int mainTaskId, Manager.Status status) {
+    public Task(String name, String description, int mainTaskId, Status status) {
         this.name = name;
         this.description = description;
         this.mainTaskId = mainTaskId;
         this.status = status;
+    }
+
+    public enum Status {
+        NEW, IN_PROGRESS, DONE
     }
 
     @Override
@@ -36,11 +40,11 @@ public class Task {
                 '.';
     }
 
-    public Manager.Status getStatus() {
+    public Task.Status getStatus() {
         return status;
     }
 
-    public void setStatus(Manager.Status status) {
+    public void setStatus(Task.Status status) {
         this.status = status;
     }
 
