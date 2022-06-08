@@ -26,9 +26,9 @@ public class Main {
         System.out.println(manager.showEpicById(3));
         System.out.println(manager.showSubtaskById(4) + "\n");
 
-        manager.updateTask(1, "1");
-        manager.updateSubtask(4, "1");
-        manager.updateSubtask(5, "1");
+        manager.updateTask(1, Task.Status.DONE);
+        manager.updateSubtask(4, Task.Status.DONE);
+        manager.updateSubtask(5, Task.Status.DONE);
 
 
         System.out.println(manager.showAllTasks());
