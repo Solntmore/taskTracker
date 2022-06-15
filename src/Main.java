@@ -3,52 +3,54 @@ import java.util.HashMap;
 public class Main {
 
     public static void main(String[] args) {
-        Manager manager = new Manager();
+        InMemoryTaskManager inMemoryTaskManager = Managers.getDefaultHistory();
         HashMap<Integer, Subtask> subtaskMap = new HashMap<>();
         System.out.println("Поехали!");
 
         Task task = new Task("Задача-1", "описание", 0, Task.Status.NEW);
-        manager.createTask(task);
+        inMemoryTaskManager.createTask(task);
         task = new Task("Задача-2", "описание", 0, Task.Status.NEW);
-        manager.createTask(task);
+        inMemoryTaskManager.createTask(task);
         Epic epic = new Epic("Эпик-1", "описание", 0, Task.Status.NEW, subtaskMap);
-        manager.createEpic(epic);
+        inMemoryTaskManager.createEpic(epic);
         Subtask subtask = new Subtask("Подзадача эпика-1", "описание", 3, Task.Status.NEW, 0);
-        manager.createSubtask(subtask);
+        inMemoryTaskManager.createSubtask(subtask);
         subtask = new Subtask("Подзадача эпика-2", "описание", 3, Task.Status.NEW, 0);
-        manager.createSubtask(subtask);
+        inMemoryTaskManager.createSubtask(subtask);
 
-        System.out.println(manager.showAllTasks());
-        System.out.println(manager.showAllEpic());
-        System.out.println(manager.showAllSubtasks() + "\n");
+        System.out.println(inMemoryTaskManager.showAllTasks());
+        System.out.println(inMemoryTaskManager.showAllEpic());
+        System.out.println(inMemoryTaskManager.showAllSubtasks() + "\n");
 
-        System.out.println(manager.showTaskById(1));
-        System.out.println(manager.showEpicById(3));
-        System.out.println(manager.showSubtaskById(4) + "\n");
+        System.out.println(inMemoryTaskManager.showTaskById(1));
+        System.out.println(inMemoryTaskManager.showEpicById(3));
+        System.out.println(inMemoryTaskManager.showSubtaskById(4) + "\n");
 
-        manager.updateTask(1, Task.Status.DONE);
-        manager.updateSubtask(4, Task.Status.DONE);
-        manager.updateSubtask(5, Task.Status.DONE);
+        inMemoryTaskManager.updateTask(1, Task.Status.DONE);
+        inMemoryTaskManager.updateSubtask(4, Task.Status.DONE);
+        inMemoryTaskManager.updateSubtask(5, Task.Status.DONE);
 
 
-        System.out.println(manager.showAllTasks());
-        System.out.println(manager.showAllEpic());
-        System.out.println(manager.showAllSubtasks() + "\n");
+        System.out.println(inMemoryTaskManager.showAllTasks());
+        System.out.println(inMemoryTaskManager.showAllEpic());
+        System.out.println(inMemoryTaskManager.showAllSubtasks() + "\n");
 
-        manager.deleteTaskById(1);
-        manager.deleteSubtaskById(4);
-        manager.deleteEpicById(3);
+        inMemoryTaskManager.deleteTaskById(1);
+        inMemoryTaskManager.deleteSubtaskById(4);
+        inMemoryTaskManager.deleteEpicById(3);
 
-        System.out.println(manager.showAllTasks());
-        System.out.println(manager.showAllEpic());
-        System.out.println(manager.showAllSubtasks() + "\n");
+        System.out.println(inMemoryTaskManager.showAllTasks());
+        System.out.println(inMemoryTaskManager.showAllEpic());
+        System.out.println(inMemoryTaskManager.showAllSubtasks() + "\n");
 
-        System.out.println(manager.deleteAllTasks());
-        System.out.println(manager.deleteAllEpics());
-        System.out.println(manager.deleteAllSubtasks());
+        System.out.println(inMemoryTaskManager.deleteAllTasks());
+        System.out.println(inMemoryTaskManager.deleteAllEpics());
+        System.out.println(inMemoryTaskManager.deleteAllSubtasks());
 
-        System.out.println(manager.showAllTasks());
-        System.out.println(manager.showAllEpic());
-        System.out.println(manager.showAllSubtasks() + "\n");
+        System.out.println(inMemoryTaskManager.showAllTasks());
+        System.out.println(inMemoryTaskManager.showAllEpic());
+        System.out.println(inMemoryTaskManager.showAllSubtasks() + "\n");
+
+        System.out.println(inMemoryTaskManager.getHistory());
     }
 }
