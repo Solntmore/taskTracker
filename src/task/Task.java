@@ -1,6 +1,8 @@
+package task;
+
 import java.util.Objects;
 
-public class Task implements Tasks {
+public class Task {
     protected String name;
     protected String description;
     protected int mainTaskId;
@@ -17,7 +19,7 @@ public class Task implements Tasks {
         NEW, IN_PROGRESS, DONE
     }
 
-    @Override
+
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -40,42 +42,34 @@ public class Task implements Tasks {
                 '.';
     }
 
-    @Override
     public Task.Status getStatus() {
         return status;
     }
 
-    @Override
     public void setStatus(Task.Status status) {
         this.status = status;
     }
 
-    @Override
     public String getName() {
         return name;
     }
 
-    @Override
     public void setName(String name) {
         this.name = name;
     }
 
-    @Override
     public String getDescription() {
         return description;
     }
 
-    @Override
     public void setDescription(String description) {
         this.description = description;
     }
 
-    @Override
     public int getMainTaskId() {
         return mainTaskId;
     }
 
-    @Override
     public void setMainTaskId(int mainTaskId) {
         this.mainTaskId = mainTaskId;
     }

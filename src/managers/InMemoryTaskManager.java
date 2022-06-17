@@ -1,14 +1,19 @@
-import java.util.ArrayList;
+package managers;
+
+import task.*;
+import interfaces.*;
+
+
 import java.util.HashMap;
-import java.util.List;
 import java.util.Objects;
 
 public class InMemoryTaskManager implements TaskManager {
     private HashMap<Integer, Task> taskMap = new HashMap<>();
     private HashMap<Integer, Subtask> subtaskMap = new HashMap<>();
     private HashMap<Integer, Epic> epicMap = new HashMap<>();
-    private List<Tasks> browsingList = new ArrayList<>();
+
     private int taskCounter = 0;
+    InMemoryHistoryManager inMemoryHistoryManager = new InMemoryHistoryManager();
 
     @Override
     public String toString() {
@@ -55,7 +60,7 @@ public class InMemoryTaskManager implements TaskManager {
         subtask.setMainTaskId(incrementTaskCounter());
         subtaskMap.put(subtask.getMainTaskId(), subtask);
         Epic epic = epicMap.get(id);
-        epic.subtaskMap.put(subtask.getMainTaskId(), subtask);
+        epic.addSubtaskMap(subtask.getMainTaskId(), subtask);
         epicMap.put(id, epic);
         return subtask;
     }
@@ -95,7 +100,7 @@ public class InMemoryTaskManager implements TaskManager {
         for (int i = 0; i < epicMap.size(); i++) {
             if (epicMap.containsKey(i)) {
                 Epic epic = epicMap.get(i);
-                epic.subtaskMap.clear();
+                epic.clearSubtaskMap();
             }
         }
         return subtaskMap;
@@ -124,7 +129,7 @@ public class InMemoryTaskManager implements TaskManager {
             Subtask subtask = subtaskMap.get(id);
             if (epicMap.containsKey(subtask.getEpicId())) {
                 Epic epic = epicMap.get(subtask.getEpicId());
-                epic.subtaskMap.remove(id);
+                epic.removeFromSubtaskMap(id);
                 epicMap.put(epic.getMainTaskId(), epic);
                 subtaskMap.remove(id);
             }
@@ -135,24 +140,24 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Task showTaskById(int id) {
         Task task = taskMap.get(id);
-        checkSizeBrowsingList();
-        browsingList.add(task);
+        inMemoryHistoryManager.checkSizeBrowsingList();
+        inMemoryHistoryManager.addTask(task);
         return task;
     }
 
     @Override
     public Epic showEpicById(int id) {
         Epic epic = epicMap.get(id);
-        checkSizeBrowsingList();
-        browsingList.add(epic);
+        inMemoryHistoryManager.checkSizeBrowsingList();
+        inMemoryHistoryManager.addTask(epic);
         return epic;
     }
 
     @Override
     public Subtask showSubtaskById(int id) {
         Subtask subtask = subtaskMap.get(id);
-        checkSizeBrowsingList();
-        browsingList.add(subtask);
+        inMemoryHistoryManager.checkSizeBrowsingList();
+        inMemoryHistoryManager.addTask(subtask);
         return subtask;
     }
 
@@ -164,7 +169,7 @@ public class InMemoryTaskManager implements TaskManager {
     public HashMap<Integer, Subtask> showSubtasksByEpicId(int id) {
         if (subtaskMap.containsKey(id)) {
             Epic epic = epicMap.get(id);
-            return epic.subtaskMap;
+            return epic.getSubtaskMap();
         } else {
             return null;
         }
@@ -185,7 +190,7 @@ public class InMemoryTaskManager implements TaskManager {
         Epic epic = epicMap.get(epicId);
         subtask = new Subtask(subtask.getName(), subtask.getDescription(), epicId, status, id);
         subtaskMap.put(id, subtask);
-        epic.subtaskMap.put(id, subtask);
+        epic.addSubtaskMap(id, subtask);
         updateEpic(epicId);
         return subtask;
     }
@@ -197,9 +202,9 @@ public class InMemoryTaskManager implements TaskManager {
         int inProgress = 0;
         int done = 0;
 
-        for (int i = 0; i < getTaskCounter(); i++) {
-            if (epic.subtaskMap.get(i) != null) {
-                Subtask subtask = epic.subtaskMap.get(i);
+        for (int i = 0; i <= getTaskCounter(); i++) {
+            if (epic.containsSubtaskMap(i)) {
+                Subtask subtask = epic.getFromSubtaskMap(i);
                 Task.Status status = subtask.getStatus();
                 if (status.equals(Task.Status.NEW)) {
                     newStatus += 1;
@@ -212,16 +217,13 @@ public class InMemoryTaskManager implements TaskManager {
         }
 
         if (inProgress == 0 && newStatus == 0 && done > 0) {
-            epic = new Epic(epic.getName(), epic.getDescription(),
-                    epic.getMainTaskId(), Task.Status.DONE, epic.subtaskMap);
+            epic.setStatus(Task.Status.DONE);
             epicMap.put(epicId, epic);
         } else if (inProgress > 0 || done > 0 && newStatus > 0) {
-            epic = new Epic(epic.getName(), epic.getDescription(),
-                    epic.getMainTaskId(), Task.Status.IN_PROGRESS, epic.subtaskMap);
+            epic.setStatus(Task.Status.IN_PROGRESS);
             epicMap.put(epicId, epic);
         } else {
-            epic = new Epic(epic.getName(), epic.getDescription(),
-                    epic.getMainTaskId(), Task.Status.NEW, epic.subtaskMap);
+            epic.setStatus(Task.Status.NEW);
             epicMap.put(epicId, epic);
         }
         return epic;
@@ -242,15 +244,6 @@ public class InMemoryTaskManager implements TaskManager {
         this.taskCounter = counter;
     }
 
-    @Override
-    public List<Tasks> getHistory() {
-        return browsingList;
-    }
 
-    private void checkSizeBrowsingList() {
-        if (browsingList.size() > 10) {
-            browsingList.remove(0);
-        }
-    }
 }
 
