@@ -3,12 +3,9 @@ package interfaces;
 import task.*;
 
 import java.util.HashMap;
+import java.util.List;
 
 public interface TaskManager {
-
-    HashMap<Integer, Task> taskMap = new HashMap<>();
-    HashMap<Integer, Subtask> subtaskMap = new HashMap<>();
-    HashMap<Integer, Epic> epicMap = new HashMap<>();
 
     Object createTask(Task task);
 
@@ -48,11 +45,7 @@ public interface TaskManager {
 
     Epic updateEpic(int epicId);
 
-    int getTaskCounter();
-
-    int incrementTaskCounter();
-
-    void setTaskCounter(int counter);
+    List<Task> getHistory();
 
 
 }

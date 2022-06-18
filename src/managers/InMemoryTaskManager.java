@@ -5,6 +5,7 @@ import interfaces.*;
 
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 public class InMemoryTaskManager implements TaskManager {
@@ -161,10 +162,6 @@ public class InMemoryTaskManager implements TaskManager {
         return subtask;
     }
 
-    /* добавлять ли сабтаски при запросе их по эпику в историю просмотров?
-    Было бы логично, но в задании Так как в истории отображается, к каким задачам было обращение в методах getTask(),
-    getSubtask() и getEpic(), эти данные в полях менеджера будут обновляться при вызове этих трех методов.*/
-
     @Override
     public HashMap<Integer, Subtask> showSubtasksByEpicId(int id) {
         if (subtaskMap.containsKey(id)) {
@@ -229,19 +226,20 @@ public class InMemoryTaskManager implements TaskManager {
         return epic;
     }
 
-    @Override
+
     public int getTaskCounter() {
         return taskCounter;
     }
-
-    @Override
     public int incrementTaskCounter() {
         return ++taskCounter;
     }
 
-    @Override
     public void setTaskCounter(int counter) {
         this.taskCounter = counter;
+    }
+
+    public List<Task> getHistory() {
+        return inMemoryHistoryManager.getHistory();
     }
 
 

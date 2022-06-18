@@ -1,14 +1,17 @@
 package managers;
 
-public final class Managers {
-    private static final InMemoryTaskManager inMemoryTaskManager = new InMemoryTaskManager();
-    private static final InMemoryHistoryManager inMemoryHistoryManager = new InMemoryHistoryManager();
+import interfaces.HistoryManager;
+import interfaces.TaskManager;
 
-    public static InMemoryTaskManager getDefault() {
-        return inMemoryTaskManager;
+public final class Managers {
+    private static final TaskManager taskManager = new InMemoryTaskManager();
+    private static final HistoryManager historyManager = new InMemoryHistoryManager();
+
+    public static TaskManager getDefault() {
+        return taskManager;
     }
 
-    public static InMemoryHistoryManager getDefaultHistory() {
-        return inMemoryHistoryManager;
+    public static HistoryManager getDefaultHistory() {
+        return historyManager;
     }
 }

@@ -1,8 +1,5 @@
 package task;
 
-import task.Subtask;
-import task.Task;
-
 import java.util.HashMap;
 
 public class Epic extends Task {
@@ -11,7 +8,6 @@ public class Epic extends Task {
 
     public Epic(String name, String description, int mainTaskId, Status status) {
         super(name, description, mainTaskId, status);
-        this.subtaskMap = this.subtaskMap;
     }
 
     public HashMap<Integer, Subtask> getSubtaskMap() {
