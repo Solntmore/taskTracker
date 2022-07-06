@@ -109,6 +109,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public HashMap<Integer, Task> deleteTaskById(int id) {
+        inMemoryHistoryManager.remove(id);
         taskMap.remove(id);
         return taskMap;
     }
@@ -118,8 +119,10 @@ public class InMemoryTaskManager implements TaskManager {
         for (int i = 0; i < getTaskCounter(); i++) {
             if (epicMap.containsKey(id) && subtaskMap.containsKey(i) && id == subtaskMap.get(i).getEpicId()) {
                 subtaskMap.remove(i);
+                inMemoryHistoryManager.remove(i);
             }
         }
+        inMemoryHistoryManager.remove(id);
         epicMap.remove(id);
         return epicMap;
     }
@@ -132,6 +135,7 @@ public class InMemoryTaskManager implements TaskManager {
                 Epic epic = epicMap.get(subtask.getEpicId());
                 epic.removeFromSubtaskMap(id);
                 epicMap.put(epic.getMainTaskId(), epic);
+                inMemoryHistoryManager.remove(id);
                 subtaskMap.remove(id);
             }
         }
@@ -141,7 +145,6 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Task showTaskById(int id) {
         Task task = taskMap.get(id);
-        inMemoryHistoryManager.checkSizeBrowsingList();
         inMemoryHistoryManager.addTask(task);
         return task;
     }
@@ -149,7 +152,6 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Epic showEpicById(int id) {
         Epic epic = epicMap.get(id);
-        inMemoryHistoryManager.checkSizeBrowsingList();
         inMemoryHistoryManager.addTask(epic);
         return epic;
     }
@@ -157,7 +159,6 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Subtask showSubtaskById(int id) {
         Subtask subtask = subtaskMap.get(id);
-        inMemoryHistoryManager.checkSizeBrowsingList();
         inMemoryHistoryManager.addTask(subtask);
         return subtask;
     }
@@ -174,62 +175,75 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Task updateTask(int id, Task.Status status) {
-        Task task = taskMap.get(id);
-        task = new Task(task.getName(), task.getDescription(), id, status);
-        taskMap.put(id, task);
-        return task;
+        if (taskMap.containsKey(id)) {
+            Task task = taskMap.get(id);
+            task = new Task(task.getName(), task.getDescription(), id, status);
+            taskMap.put(id, task);
+            return task;
+        } else {
+            return null;
+        }
     }
 
     @Override
     public Subtask updateSubtask(int id, Task.Status status) {
-        Subtask subtask = subtaskMap.get(id);
-        int epicId = subtask.getEpicId();
-        Epic epic = epicMap.get(epicId);
-        subtask = new Subtask(subtask.getName(), subtask.getDescription(), epicId, status, id);
-        subtaskMap.put(id, subtask);
-        epic.addSubtaskMap(id, subtask);
-        updateEpic(epicId);
-        return subtask;
+        if (subtaskMap.containsKey(id)) {
+            Subtask subtask = subtaskMap.get(id);
+            int epicId = subtask.getEpicId();
+            Epic epic = epicMap.get(epicId);
+            subtask = new Subtask(subtask.getName(), subtask.getDescription(), epicId, status, id);
+            subtaskMap.put(id, subtask);
+            epic.addSubtaskMap(id, subtask);
+            updateEpic(epicId);
+            return subtask;
+        } else {
+            return null;
+        }
     }
 
     @Override
     public Epic updateEpic(int epicId) {
-        Epic epic = epicMap.get(epicId);
-        int newStatus = 0;
-        int inProgress = 0;
-        int done = 0;
+        if (epicMap.containsKey(epicId)) {
+            Epic epic = epicMap.get(epicId);
+            int newStatus = 0;
+            int inProgress = 0;
+            int done = 0;
 
-        for (int i = 0; i <= getTaskCounter(); i++) {
-            if (epic.containsSubtaskMap(i)) {
-                Subtask subtask = epic.getFromSubtaskMap(i);
-                Task.Status status = subtask.getStatus();
-                if (status.equals(Task.Status.NEW)) {
-                    newStatus += 1;
-                } else if (status.equals(Task.Status.IN_PROGRESS)) {
-                    inProgress += 1;
-                } else {
-                    done += 1;
+            for (int i = 0; i <= getTaskCounter(); i++) {
+                if (epic.containsSubtaskMap(i)) {
+                    Subtask subtask = epic.getFromSubtaskMap(i);
+                    Task.Status status = subtask.getStatus();
+                    if (status.equals(Task.Status.NEW)) {
+                        newStatus += 1;
+                    } else if (status.equals(Task.Status.IN_PROGRESS)) {
+                        inProgress += 1;
+                    } else {
+                        done += 1;
+                    }
                 }
             }
-        }
 
-        if (inProgress == 0 && newStatus == 0 && done > 0) {
-            epic.setStatus(Task.Status.DONE);
-            epicMap.put(epicId, epic);
-        } else if (inProgress > 0 || done > 0 && newStatus > 0) {
-            epic.setStatus(Task.Status.IN_PROGRESS);
-            epicMap.put(epicId, epic);
+            if (inProgress == 0 && newStatus == 0 && done > 0) {
+                epic.setStatus(Task.Status.DONE);
+                epicMap.put(epicId, epic);
+            } else if (inProgress > 0 || done > 0 && newStatus > 0) {
+                epic.setStatus(Task.Status.IN_PROGRESS);
+                epicMap.put(epicId, epic);
+            } else {
+                epic.setStatus(Task.Status.NEW);
+                epicMap.put(epicId, epic);
+            }
+            return epic;
         } else {
-            epic.setStatus(Task.Status.NEW);
-            epicMap.put(epicId, epic);
+            return null;
         }
-        return epic;
     }
 
 
     public int getTaskCounter() {
         return taskCounter;
     }
+
     public int incrementTaskCounter() {
         return ++taskCounter;
     }
@@ -238,6 +252,7 @@ public class InMemoryTaskManager implements TaskManager {
         this.taskCounter = counter;
     }
 
+    @Override
     public List<Task> getHistory() {
         return inMemoryHistoryManager.getHistory();
     }
