@@ -2,10 +2,14 @@ import interfaces.TaskManager;
 import managers.Managers;
 import task.*;
 
+import java.util.List;
+
 public class Main {
 
     public static void main(String[] args) {
         TaskManager taskManager = Managers.getDefault();
+
+
         System.out.println("Поехали!");
 
         Task task = new Task("Задача-1", "описание", 0, Task.Status.NEW);
@@ -25,27 +29,26 @@ public class Main {
 
         System.out.println(taskManager.showAllTasks());
         System.out.println(taskManager.showAllEpic());
-        System.out.println(taskManager.showAllSubtasks() + "\n");
+        System.out.println(taskManager.showAllSubtasks());
 
-        System.out.println(taskManager.showTaskById(1));
-        System.out.println(taskManager.getHistory() + "\n");
-        System.out.println(taskManager.showEpicById(3));
-        System.out.println(taskManager.getHistory() + "\n");
-        System.out.println(taskManager.showSubtaskById(4));
-        System.out.println(taskManager.getHistory() + "\n");
-        System.out.println(taskManager.showTaskById(1));
-        System.out.println(taskManager.getHistory() + "\n");
-        System.out.println(taskManager.showEpicById(7));
-        System.out.println(taskManager.getHistory() + "\n");
-        System.out.println(taskManager.showSubtaskById(4));
-        System.out.println(taskManager.getHistory() + "\n");
+        System.out.println("\n" + taskManager.showTaskById(1));
+        printHistory();
+        System.out.println("\n" + taskManager.showEpicById(3));
+        printHistory();
+        System.out.println("\n" + taskManager.showSubtaskById(4));
+        printHistory();
+        System.out.println("\n" + taskManager.showTaskById(1));
+        printHistory();
+        System.out.println("\n" + taskManager.showEpicById(7));
+        printHistory();
+        System.out.println("\n" + taskManager.showSubtaskById(4));
+        printHistory();
         taskManager.deleteTaskById(1);
-        System.out.println(taskManager.getHistory() + "\n");
+        printHistory();
         taskManager.deleteSubtaskById(4);
-        System.out.println(taskManager.getHistory() + "\n");
+        printHistory();
         taskManager.deleteEpicById(3);
-        System.out.println(taskManager.getHistory() + "\n");
-
+        printHistory();
         /* Чтобы при проверке не мешали методы, работоспособность которых проверили в прошлых спринтах,
         закомментировал их.
         taskManager.updateTask(1, Task.Status.DONE);
@@ -67,6 +70,15 @@ public class Main {
         System.out.println(taskManager.showAllTasks() + "\n");
         System.out.println(taskManager.showAllEpic() + "\n");
         System.out.println(taskManager.showAllSubtasks() + "\n");*/
-
     }
+
+    private static void printHistory() {
+        TaskManager taskManager = Managers.getDefault();
+        List<Task> historyList = taskManager.getHistory();
+        System.out.println("\n" + "History:");
+        for (Task task : historyList) {
+            System.out.println(task);
+        }
+    }
+
 }

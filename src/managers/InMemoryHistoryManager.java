@@ -7,7 +7,8 @@ import java.util.*;
 
 public class InMemoryHistoryManager implements HistoryManager {
     private final CustomLinkedList<Task> customLinkedList = new CustomLinkedList<>();
-    private final Map<Integer, Node> mapForCustomLinkList = new HashMap<>();
+    private final Map<Integer, CustomLinkedList.Node> mapForCustomLinkList = new HashMap<>();
+
 
     @Override
     public void addTask(Task task) {
@@ -27,9 +28,20 @@ public class InMemoryHistoryManager implements HistoryManager {
     }
 
     public class CustomLinkedList<T> {
+        public class Node<E> {
+            public E data;
+            public Node<E> next;
+            public Node<E> prev;
+
+            public Node(Node<E> prev, E data, Node<E> next) {
+                this.data = data;
+                this.next = next;
+                this.prev = prev;
+            }
+        }
+
         private Node<T> head;
         private Node<T> tail;
-        private int size = 0;
 
         public void linkLast(T element) {
             Task task = (Task) element;
@@ -46,14 +58,13 @@ public class InMemoryHistoryManager implements HistoryManager {
             } else {
                 oldTail.next = newNode;
             }
-            size++;
         }
 
         public List<Task> getTasks() {
             List<Task> browsingList = new ArrayList<>();
             Node<T> oldHead = head;
             browsingList.add((Task) head.data);
-            for (int i = 0; i <= size; i++) {
+            for (int i = 0; i <= mapForCustomLinkList.size(); i++) {
                 if (oldHead.next != null) {
                     oldHead = oldHead.next;
                     if (oldHead.data != null) {

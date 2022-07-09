@@ -14,7 +14,7 @@ public class InMemoryTaskManager implements TaskManager {
     private HashMap<Integer, Epic> epicMap = new HashMap<>();
 
     private int taskCounter = 0;
-    InMemoryHistoryManager inMemoryHistoryManager = new InMemoryHistoryManager();
+    HistoryManager inMemoryHistoryManager = Managers.getDefaultHistory();
 
     @Override
     public String toString() {
