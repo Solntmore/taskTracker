@@ -1,15 +1,22 @@
-import interfaces.TaskManager;
+import managers.FileBackedTasksManager;
 import managers.Managers;
 import task.*;
 
+import java.io.IOException;
 import java.util.List;
+
+import static managers.Managers.loadFromFile;
 
 public class Main {
 
-    public static void main(String[] args) {
-        TaskManager taskManager = Managers.getDefault();
-
-
+    public static void main(String[] args) throws IOException {
+        //backUpFile не является константной, так как я полагаю, что пользователь сам сможет выбирать
+        // файл хранения/восстановления
+        String backUpFile = "C:\\Users\\solnt\\IdeaProjects\\taskTracker\\taskManager.csv";
+        FileBackedTasksManager taskManager = Managers.getDefault(backUpFile);
+        //Проверка через создания нового менеджера историй и вызова истории просмотров задач реализована через метод
+        //printHistory(), каждый вызов этого метода создает новый экземпляр менеджера и восстанавливает данные из файла,
+        //после чего выводит историю, что позволяет убедиться в том, что восстановление из файла работает корректно.
         System.out.println("Поехали!");
 
         Task task = new Task("Задача-1", "описание", 0, Task.Status.NEW);
@@ -31,6 +38,10 @@ public class Main {
         System.out.println(taskManager.showAllEpic());
         System.out.println(taskManager.showAllSubtasks());
 
+        taskManager.updateTask(1, Task.Status.DONE);
+        taskManager.updateSubtask(4, Task.Status.DONE);
+        taskManager.updateSubtask(5, Task.Status.DONE);
+
         System.out.println("\n" + taskManager.showTaskById(1));
         printHistory();
         System.out.println("\n" + taskManager.showEpicById(3));
@@ -49,6 +60,7 @@ public class Main {
         printHistory();
         taskManager.deleteEpicById(3);
         printHistory();
+
         /* Чтобы при проверке не мешали методы, работоспособность которых проверили в прошлых спринтах,
         закомментировал их.
         taskManager.updateTask(1, Task.Status.DONE);
@@ -73,7 +85,8 @@ public class Main {
     }
 
     private static void printHistory() {
-        TaskManager taskManager = Managers.getDefault();
+        String backUpFile = "C:\\Users\\solnt\\IdeaProjects\\taskTracker\\taskManager.csv";
+        FileBackedTasksManager taskManager = loadFromFile(backUpFile);
         List<Task> historyList = taskManager.getHistory();
         System.out.println("\n" + "History:");
         for (Task task : historyList) {

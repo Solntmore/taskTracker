@@ -24,22 +24,21 @@ public class InMemoryHistoryManager implements HistoryManager {
     public void remove(int id) {
         if (mapForCustomLinkList.containsKey(id)) {
             customLinkedList.removeNode(mapForCustomLinkList.get(id));
+            mapForCustomLinkList.remove(id);
         }
     }
 
-    public class CustomLinkedList<T> {
-        public class Node<E> {
-            public E data;
-            public Node<E> next;
-            public Node<E> prev;
-
-            public Node(Node<E> prev, E data, Node<E> next) {
-                this.data = data;
-                this.next = next;
-                this.prev = prev;
-            }
+    @Override
+    public ArrayList<Integer> getIdFromMapForCustomLinkList() {
+        ArrayList<Integer> tasksId = new ArrayList<>();
+        for (Integer id : mapForCustomLinkList.keySet()) {
+            tasksId.add(id);
         }
+        return tasksId;
+    }
 
+
+    public class CustomLinkedList<T> {
         private Node<T> head;
         private Node<T> tail;
 
@@ -63,15 +62,16 @@ public class InMemoryHistoryManager implements HistoryManager {
         public List<Task> getTasks() {
             List<Task> browsingList = new ArrayList<>();
             Node<T> oldHead = head;
-            browsingList.add((Task) head.data);
-            for (int i = 0; i <= mapForCustomLinkList.size(); i++) {
-                if (oldHead.next != null) {
-                    oldHead = oldHead.next;
-                    if (oldHead.data != null) {
-                        browsingList.add((Task) oldHead.data);
+            if (oldHead != null) {
+                browsingList.add((Task) head.data);
+                for (int i = 0; i <= mapForCustomLinkList.size(); i++) {
+                    if (oldHead.next != null) {
+                        oldHead = oldHead.next;
+                        if (oldHead.data != null) {
+                            browsingList.add((Task) oldHead.data);
+                        }
                     }
                 }
-
             }
             return browsingList;
         }
@@ -88,6 +88,18 @@ public class InMemoryHistoryManager implements HistoryManager {
             }
             if (head == nodeToRemove) {
                 head = nodeToRemove.next;
+            }
+        }
+
+        public class Node<E> {
+            public E data;
+            public Node<E> next;
+            public Node<E> prev;
+
+            public Node(Node<E> prev, E data, Node<E> next) {
+                this.data = data;
+                this.next = next;
+                this.prev = prev;
             }
         }
     }

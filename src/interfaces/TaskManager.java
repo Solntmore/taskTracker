@@ -2,16 +2,17 @@ package interfaces;
 
 import task.*;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
 public interface TaskManager {
 
-    Object createTask(Task task);
+    Object createTask(Task task) throws IOException;
 
-    Object createEpic(Epic epic);
+    Object createEpic(Epic epic) throws IOException;
 
-    Object createSubtask(Subtask subtask);
+    Object createSubtask(Subtask subtask) throws IOException;
 
     HashMap<Integer, Task> showAllTasks();
 
@@ -19,31 +20,31 @@ public interface TaskManager {
 
     HashMap<Integer, Subtask> showAllSubtasks();
 
-    HashMap<Integer, Task> deleteAllTasks();
+    HashMap<Integer, Task> deleteAllTasks() throws IOException;
 
-    HashMap<Integer, Epic> deleteAllEpics();
+    HashMap<Integer, Epic> deleteAllEpics() throws IOException;
 
-    HashMap<Integer, Subtask> deleteAllSubtasks();
+    HashMap<Integer, Subtask> deleteAllSubtasks() throws IOException;
 
-    HashMap<Integer, Task> deleteTaskById(int id);
+    HashMap<Integer, Task> deleteTaskById(int id) throws IOException;
 
-    HashMap<Integer, Epic> deleteEpicById(int id);
+    HashMap<Integer, Epic> deleteEpicById(int id) throws IOException;
 
-    HashMap<Integer, Subtask> deleteSubtaskById(int id);
+    HashMap<Integer, Subtask> deleteSubtaskById(int id) throws IOException;
 
-    Task showTaskById(int id);
+    Task showTaskById(int id) throws IOException;
 
-    Epic showEpicById(int id);
+    Epic showEpicById(int id) throws IOException;
 
-    Subtask showSubtaskById(int id);
+    Subtask showSubtaskById(int id) throws IOException;
 
-    HashMap<Integer, Subtask> showSubtasksByEpicId(int id);
+    HashMap<Integer, Subtask> showSubtasksByEpicId(int id) throws IOException;
 
-    Task updateTask(int id, Task.Status status);
+    Task updateTask(int id, Task.Status status) throws IOException;
 
-    Subtask updateSubtask(int id, Task.Status status);
+    Subtask updateSubtask(int id, Task.Status status) throws IOException;
 
-    Epic updateEpic(int epicId);
+    Epic updateEpic(int epicId) throws IOException;
 
     List<Task> getHistory();
 
