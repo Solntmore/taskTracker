@@ -16,7 +16,18 @@ public class Task {
     }
 
     public enum Status {
-        NEW, IN_PROGRESS, DONE
+        NEW, IN_PROGRESS, DONE;
+
+        public static Status statusSet(String status) {
+            switch (status) {
+                case "DONE":
+                    return Status.DONE;
+                case "NEW":
+                    return Status.NEW;
+                default:
+                    return Status.IN_PROGRESS;
+            }
+        }
     }
 
 

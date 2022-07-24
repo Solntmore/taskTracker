@@ -2,18 +2,31 @@ package managers;
 
 import interfaces.TaskManager;
 import task.*;
+import Exceptions.*;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+
+import static task.Task.Status.statusSet;
 
 public class FileBackedTasksManager extends InMemoryTaskManager implements TaskManager {
 
-    String backUpFile;
+    private String backUpFile;
 
     public FileBackedTasksManager(String path) {
         backUpFile = path;
+    }
+
+    public static FileBackedTasksManager loadFromFile(String file) {
+        try {
+            FileBackedTasksManager taskManager = new FileBackedTasksManager(file);
+            taskManager.recoveryFromFile();
+            return taskManager;
+        } catch (ManagerSaveException e) {
+            System.out.println(e.getMessage());
+            return null;
+        }
     }
 
     @Override
@@ -129,7 +142,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager implements TaskM
     }
 
     private void save() {
-        try (Writer fileWriter = new FileWriter(backUpFile)) {
+        try (Writer fileWriter = new FileWriter(backUpFile, StandardCharsets.UTF_8)) {
             fileWriter.write("id,type,name,status,description,epic\n");
 
             for (int i = 0; i <= getTaskCounter(); i++) {
@@ -158,20 +171,25 @@ public class FileBackedTasksManager extends InMemoryTaskManager implements TaskM
 
         } catch (IOException e) {
             System.out.println("Ошибка сохранения" + Arrays.toString(e.getStackTrace()));
+        } catch (ManagerSaveException e) {
+            System.out.println(e.getMessage());
         }
     }
 
     //вспомогательный внутренний метод класса, который из файла вытаскивает данные и раскладывает их по нужным мапам
     //и листам.
-    public void recoveryFromFile() {
-        try (FileReader reader = new FileReader(backUpFile); BufferedReader br = new BufferedReader(reader)) {
+    private void recoveryFromFile() {
+        try (BufferedReader br = new BufferedReader(new FileReader(backUpFile, StandardCharsets.UTF_8))) {
 
             while (br.ready()) {
                 String line = br.readLine();
                 String[] lineValue = line.split(",");
                 if ((!lineValue[0].isEmpty() && lineValue.length > 1)) {
-                    if (lineValue[1].equals("TASK") || lineValue[1].equals("SUBTASK") || lineValue[1].equals("EPIC")) {
+                    if (lineValue[1].equals(TaskTypes.TASK.name()) || lineValue[1].equals(TaskTypes.SUBTASK.name())
+                            || lineValue[1].equals(TaskTypes.EPIC.name())) {
                         fromString(line);
+                        recoveryTaskCounter(Integer.parseInt(lineValue[0]));
+
                     }
                     if (isNumeric(lineValue[0]) && isNumeric(lineValue[1])) {
                         makeTaskById(lineValue);
@@ -182,7 +200,13 @@ public class FileBackedTasksManager extends InMemoryTaskManager implements TaskM
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new ManagerSaveException("Произошла ошибка восстановления из файла, попробуйте еще раз.");
+        }
+    }
+
+    private void recoveryTaskCounter(int newId) {
+        if (newId > getTaskCounter()) {
+            setTaskCounter(newId);
         }
     }
 
@@ -213,6 +237,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager implements TaskM
         }
     }
 
+    //Задал вопрос в Slack на тему необходимости переноса toString
     //использовал перегрузку метода toString, так как параметры task и subtask отличаются
     private String toString(Task task) {
         return task.getMainTaskId() + "," + "TASK," + task.getName() + ","
@@ -229,57 +254,32 @@ public class FileBackedTasksManager extends InMemoryTaskManager implements TaskM
                 + epic.getStatus() + "," + epic.getDescription() + "," + "\n";
     }
 
-    private void fromString(String line) {
+    private void fromString(String line) throws IOException {
         String[] taskArray = line.split(",");
-        if (taskArray[1].equals("TASK")) {
-            Task.Status status = statusSet(taskArray[3]);
-            String name = taskArray[2];
-            String description = taskArray[4];
-            int mainTaskId = Integer.parseInt(taskArray[0]);
-            Task task = new Task(name, description, mainTaskId, status);
-            try {
+        String taskType = taskArray[1];
+        Task.Status status = statusSet(taskArray[3]);
+        String name = taskArray[2];
+        String description = taskArray[4];
+        int mainTaskId = Integer.parseInt(taskArray[0]);
+
+        try {
+            if (taskType.equals(TaskTypes.TASK.name())) {
+                Task task = new Task(name, description, mainTaskId, status);
                 backUpTask(task);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } else if (taskArray[1].equals("SUBTASK")) {
-            Task.Status status = statusSet(taskArray[3]);
-            String name = taskArray[2];
-            String description = taskArray[4];
-            int mainTaskId = Integer.parseInt(taskArray[0]);
-            int epicId = Integer.parseInt(taskArray[5]);
-            Subtask subtask = new Subtask(name, description, epicId, status, mainTaskId);
-            try {
+            } else if (taskType.equals(TaskTypes.SUBTASK.name())) {
+                int epicId = Integer.parseInt(taskArray[5]);
+                Subtask subtask = new Subtask(name, description, epicId, status, mainTaskId);
                 backUpSubtask(subtask);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
-            Task.Status status = statusSet(taskArray[3]);
-            String name = taskArray[2];
-            String description = taskArray[4];
-            int mainTaskId = Integer.parseInt(taskArray[0]);
-            Epic epic = new Epic(name, description, mainTaskId, status);
-            try {
+            } else {
+                Epic epic = new Epic(name, description, mainTaskId, status);
                 backUpEpic(epic);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
+        } catch (IOException e) {
+            throw new ManagerSaveException("Произошла непредвиденная ошибка создания задачи, попробуйте еще раз.");
         }
     }
 
     //вспомогательный внутренний метод класса, который определяет статус задачи при восстановлении
-    private Task.Status statusSet(String status) {
-        switch (status) {
-            case "DONE":
-                return Task.Status.DONE;
-            case "NEW":
-                return Task.Status.NEW;
-            default:
-                return Task.Status.IN_PROGRESS;
-        }
-    }
-
     private void backUpTask(Task task) throws IOException {
         taskMap.put(task.getMainTaskId(), task);
     }

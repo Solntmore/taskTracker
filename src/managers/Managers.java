@@ -18,9 +18,5 @@ public final class Managers {
 
     //сделал метод статик, согласно ТЗ, хотя до конца пока не понимаю, почему для восстановления нельзя такой же
     //способ, что и при создании новых экземпляров.
-    public static FileBackedTasksManager loadFromFile(String file) {
-        FileBackedTasksManager taskManager = new FileBackedTasksManager(file);
-        taskManager.recoveryFromFile();
-        return taskManager;
-    }
+
 }

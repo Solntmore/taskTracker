@@ -1,11 +1,13 @@
 import managers.FileBackedTasksManager;
 import managers.Managers;
-import task.*;
+import task.Epic;
+import task.Subtask;
+import task.Task;
 
 import java.io.IOException;
 import java.util.List;
 
-import static managers.Managers.loadFromFile;
+import static managers.FileBackedTasksManager.loadFromFile;
 
 public class Main {
 
@@ -60,6 +62,7 @@ public class Main {
         printHistory();
         taskManager.deleteEpicById(3);
         printHistory();
+
 
         /* Чтобы при проверке не мешали методы, работоспособность которых проверили в прошлых спринтах,
         закомментировал их.
