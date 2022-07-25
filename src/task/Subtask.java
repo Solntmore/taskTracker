@@ -10,7 +10,6 @@ public class Subtask extends Task {
         this.epicId = epicId;
     }
 
-
     @Override
     public String toString() {
         return "Название задачи: " + name + '\'' +
@@ -18,6 +17,11 @@ public class Subtask extends Task {
                 " ID основной задачи: " + epicId + '\'' +
                 " ID подзадачи: " + mainTaskId + " статус задачи: "
                 + status + '.';
+    }
+@Override
+    public String toCsvString() {
+        return getMainTaskId() + "," + "SUBTASK," + getName() + ","
+                + getStatus() + "," + getDescription() + "," + getEpicId() + "\n";
     }
 
     @Override

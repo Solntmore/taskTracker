@@ -64,7 +64,7 @@ public class Main {
         printHistory();
 
 
-        /* Чтобы при проверке не мешали методы, работоспособность которых проверили в прошлых спринтах,
+       /* Чтобы при проверке не мешали методы, работоспособность которых проверили в прошлых спринтах,
         закомментировал их.
         taskManager.updateTask(1, Task.Status.DONE);
         taskManager.updateSubtask(4, Task.Status.DONE);
@@ -90,6 +90,7 @@ public class Main {
     private static void printHistory() {
         String backUpFile = "C:\\Users\\solnt\\IdeaProjects\\taskTracker\\taskManager.csv";
         FileBackedTasksManager taskManager = loadFromFile(backUpFile);
+        assert taskManager != null;
         List<Task> historyList = taskManager.getHistory();
         System.out.println("\n" + "History:");
         for (Task task : historyList) {

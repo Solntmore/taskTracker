@@ -12,10 +12,47 @@ import static task.Task.Status.statusSet;
 
 public class FileBackedTasksManager extends InMemoryTaskManager implements TaskManager {
 
-    private String backUpFile;
+    private final String backUpFile;
 
     public FileBackedTasksManager(String path) {
         backUpFile = path;
+    }
+
+    private static final String BACK_UP_FILE = "taskManager.csv";
+
+    public static void main(String[] args) throws IOException {
+
+        FileBackedTasksManager taskManager = Managers.getDefault(BACK_UP_FILE);
+
+        Task task = new Task("Задача-1", "описание", 0, Task.Status.NEW);
+        taskManager.createTask(task);
+        task = new Task("Задача-2", "описание", 0, Task.Status.NEW);
+        taskManager.createTask(task);
+        Epic epic = new Epic("Эпик-1", "описание", 0, Task.Status.NEW);
+        taskManager.createEpic(epic);
+        Subtask subtask = new Subtask("Подзадача эпика-1", "описание", 3, Task.Status.NEW, 0);
+        taskManager.createSubtask(subtask);
+        subtask = new Subtask("Подзадача эпика-2", "описание", 3, Task.Status.NEW, 0);
+        taskManager.createSubtask(subtask);
+        subtask = new Subtask("Подзадача эпика-3", "описание", 3, Task.Status.NEW, 0);
+        taskManager.createSubtask(subtask);
+        epic = new Epic("Эпик-2", "описание", 0, Task.Status.NEW);
+        taskManager.createEpic(epic);
+
+        System.out.println("\n" + taskManager.showTaskById(1));
+        System.out.println("\n" + taskManager.showEpicById(3));
+        System.out.println("\n" + taskManager.showSubtaskById(4));
+        System.out.println("\n" + taskManager.showTaskById(1));
+        System.out.println("\n" + taskManager.showEpicById(7));
+        System.out.println("\n" + taskManager.showSubtaskById(4));
+
+        FileBackedTasksManager loadTaskManager = loadFromFile(BACK_UP_FILE);
+        assert loadTaskManager != null;
+        System.out.println(loadTaskManager.showAllTasks());
+        System.out.println(loadTaskManager.showAllEpic());
+        System.out.println(loadTaskManager.showAllSubtasks());
+        System.out.println(loadTaskManager.getHistory());
+
     }
 
     public static FileBackedTasksManager loadFromFile(String file) {
@@ -147,17 +184,17 @@ public class FileBackedTasksManager extends InMemoryTaskManager implements TaskM
 
             for (int i = 0; i <= getTaskCounter(); i++) {
                 if (taskMap.containsKey(i)) {
-                    fileWriter.write(toString(taskMap.get(i)));
+                    fileWriter.write(taskMap.get(i).toCsvString());
                 }
             }
             for (int i = 0; i <= getTaskCounter(); i++) {
                 if (epicMap.containsKey(i)) {
-                    fileWriter.write(toString(epicMap.get(i)));
+                    fileWriter.write(epicMap.get(i).toCsvString());
                 }
             }
             for (int i = 0; i <= getTaskCounter(); i++) {
                 if (subtaskMap.containsKey(i)) {
-                    fileWriter.write(toString(subtaskMap.get(i)));
+                    fileWriter.write(subtaskMap.get(i).toCsvString());
                 }
             }
 
@@ -171,8 +208,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager implements TaskM
 
         } catch (IOException e) {
             System.out.println("Ошибка сохранения" + Arrays.toString(e.getStackTrace()));
-        } catch (ManagerSaveException e) {
-            System.out.println(e.getMessage());
+            throw new ManagerSaveException("Ошибка сохранения" + Arrays.toString(e.getStackTrace()));
         }
     }
 
@@ -185,8 +221,8 @@ public class FileBackedTasksManager extends InMemoryTaskManager implements TaskM
                 String line = br.readLine();
                 String[] lineValue = line.split(",");
                 if ((!lineValue[0].isEmpty() && lineValue.length > 1)) {
-                    if (lineValue[1].equals(TaskTypes.TASK.name()) || lineValue[1].equals(TaskTypes.SUBTASK.name())
-                            || lineValue[1].equals(TaskTypes.EPIC.name())) {
+                    if (lineValue[1].equals(TaskType.TASK.name()) || lineValue[1].equals(TaskType.SUBTASK.name())
+                            || lineValue[1].equals(TaskType.EPIC.name())) {
                         fromString(line);
                         recoveryTaskCounter(Integer.parseInt(lineValue[0]));
 
@@ -237,23 +273,6 @@ public class FileBackedTasksManager extends InMemoryTaskManager implements TaskM
         }
     }
 
-    //Задал вопрос в Slack на тему необходимости переноса toString
-    //использовал перегрузку метода toString, так как параметры task и subtask отличаются
-    private String toString(Task task) {
-        return task.getMainTaskId() + "," + "TASK," + task.getName() + ","
-                + task.getStatus() + "," + task.getDescription() + "," + "\n";
-    }
-
-    private String toString(Subtask subtask) {
-        return subtask.getMainTaskId() + "," + "SUBTASK," + subtask.getName() + ","
-                + subtask.getStatus() + "," + subtask.getDescription() + "," + subtask.getEpicId() + "\n";
-    }
-
-    private String toString(Epic epic) {
-        return epic.getMainTaskId() + "," + "EPIC," + epic.getName() + ","
-                + epic.getStatus() + "," + epic.getDescription() + "," + "\n";
-    }
-
     private void fromString(String line) throws IOException {
         String[] taskArray = line.split(",");
         String taskType = taskArray[1];
@@ -263,10 +282,10 @@ public class FileBackedTasksManager extends InMemoryTaskManager implements TaskM
         int mainTaskId = Integer.parseInt(taskArray[0]);
 
         try {
-            if (taskType.equals(TaskTypes.TASK.name())) {
+            if (taskType.equals(TaskType.TASK.name())) {
                 Task task = new Task(name, description, mainTaskId, status);
                 backUpTask(task);
-            } else if (taskType.equals(TaskTypes.SUBTASK.name())) {
+            } else if (taskType.equals(TaskType.SUBTASK.name())) {
                 int epicId = Integer.parseInt(taskArray[5]);
                 Subtask subtask = new Subtask(name, description, epicId, status, mainTaskId);
                 backUpSubtask(subtask);

@@ -53,6 +53,11 @@ public class Task {
                 '.';
     }
 
+    public String toCsvString() {
+        return getMainTaskId() + "," + "TASK," + getName() + ","
+                + getStatus() + "," + getDescription() + "," + "\n";
+    }
+
     public Task.Status getStatus() {
         return status;
     }

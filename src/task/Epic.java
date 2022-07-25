@@ -9,6 +9,11 @@ public class Epic extends Task {
     public Epic(String name, String description, int mainTaskId, Status status) {
         super(name, description, mainTaskId, status);
     }
+@Override
+    public String toCsvString() {
+        return getMainTaskId() + "," + "EPIC," + getName() + ","
+                + getStatus() + "," + getDescription() + "," + "\n";
+    }
 
     public HashMap<Integer, Subtask> getSubtaskMap() {
         return subtaskMap;
