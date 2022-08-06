@@ -16,7 +16,7 @@ public interface TaskManager {
 
     HashMap<Integer, Task> showAllTasks();
 
-    HashMap<Integer, Epic> showAllEpic();
+    HashMap<Integer, Epic> showAllEpics();
 
     HashMap<Integer, Subtask> showAllSubtasks();
 

@@ -6,6 +6,8 @@ import Exceptions.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static task.Task.Status.statusSet;
@@ -20,39 +22,8 @@ public class FileBackedTasksManager extends InMemoryTaskManager implements TaskM
 
     private static final String BACK_UP_FILE = "taskManager.csv";
 
-    public static void main(String[] args) throws IOException {
-
+    public static void main(String[] args) {
         FileBackedTasksManager taskManager = Managers.getDefault(BACK_UP_FILE);
-
-        Task task = new Task("Задача-1", "описание", 0, Task.Status.NEW);
-        taskManager.createTask(task);
-        task = new Task("Задача-2", "описание", 0, Task.Status.NEW);
-        taskManager.createTask(task);
-        Epic epic = new Epic("Эпик-1", "описание", 0, Task.Status.NEW);
-        taskManager.createEpic(epic);
-        Subtask subtask = new Subtask("Подзадача эпика-1", "описание", 3, Task.Status.NEW, 0);
-        taskManager.createSubtask(subtask);
-        subtask = new Subtask("Подзадача эпика-2", "описание", 3, Task.Status.NEW, 0);
-        taskManager.createSubtask(subtask);
-        subtask = new Subtask("Подзадача эпика-3", "описание", 3, Task.Status.NEW, 0);
-        taskManager.createSubtask(subtask);
-        epic = new Epic("Эпик-2", "описание", 0, Task.Status.NEW);
-        taskManager.createEpic(epic);
-
-        System.out.println("\n" + taskManager.showTaskById(1));
-        System.out.println("\n" + taskManager.showEpicById(3));
-        System.out.println("\n" + taskManager.showSubtaskById(4));
-        System.out.println("\n" + taskManager.showTaskById(1));
-        System.out.println("\n" + taskManager.showEpicById(7));
-        System.out.println("\n" + taskManager.showSubtaskById(4));
-
-        FileBackedTasksManager loadTaskManager = loadFromFile(BACK_UP_FILE);
-        assert loadTaskManager != null;
-        System.out.println(loadTaskManager.showAllTasks());
-        System.out.println(loadTaskManager.showAllEpic());
-        System.out.println(loadTaskManager.showAllSubtasks());
-        System.out.println(loadTaskManager.getHistory());
-
     }
 
     public static FileBackedTasksManager loadFromFile(String file) {
@@ -132,22 +103,37 @@ public class FileBackedTasksManager extends InMemoryTaskManager implements TaskM
     @Override
     public Task showTaskById(int id) throws IOException {
         Task taskOverride = super.showTaskById(id);
-        save();
-        return taskOverride;
+        if (taskOverride == null) {
+            System.out.println("Задачи с id " + id + " нет.");
+            return null;
+        } else {
+            save();
+            return taskOverride;
+        }
     }
 
     @Override
     public Epic showEpicById(int id) throws IOException {
         Epic epicOverride = super.showEpicById(id);
-        save();
-        return epicOverride;
+        if (epicOverride == null) {
+            System.out.println("Эпика с id " + id + " нет.");
+            return null;
+        } else {
+            save();
+            return epicOverride;
+        }
     }
 
     @Override
     public Subtask showSubtaskById(int id) throws IOException {
         Subtask subtaskOverride = super.showSubtaskById(id);
-        save();
-        return subtaskOverride;
+        if (subtaskOverride == null) {
+            System.out.println("Подзадачи с id " + id + " нет.");
+            return null;
+        } else {
+            save();
+            return subtaskOverride;
+        }
     }
 
     @Override
@@ -180,7 +166,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager implements TaskM
 
     private void save() {
         try (Writer fileWriter = new FileWriter(backUpFile, StandardCharsets.UTF_8)) {
-            fileWriter.write("id,type,name,status,description,epic\n");
+            fileWriter.write("id,type,name,status,description,startTime,duration,epic\n");
 
             for (int i = 0; i <= getTaskCounter(); i++) {
                 if (taskMap.containsKey(i)) {
@@ -279,18 +265,20 @@ public class FileBackedTasksManager extends InMemoryTaskManager implements TaskM
         Task.Status status = statusSet(taskArray[3]);
         String name = taskArray[2];
         String description = taskArray[4];
+        LocalDateTime startTime = backUpStartTime(taskArray[5]);
+        Duration duration = backUpDuration(taskArray[6]);
         int mainTaskId = Integer.parseInt(taskArray[0]);
 
         try {
             if (taskType.equals(TaskType.TASK.name())) {
-                Task task = new Task(name, description, mainTaskId, status);
+                Task task = new Task(name, description, mainTaskId, status, startTime, duration);
                 backUpTask(task);
             } else if (taskType.equals(TaskType.SUBTASK.name())) {
-                int epicId = Integer.parseInt(taskArray[5]);
-                Subtask subtask = new Subtask(name, description, epicId, status, mainTaskId);
+                int epicId = Integer.parseInt(taskArray[7]);
+                Subtask subtask = new Subtask(name, description, epicId, status, mainTaskId, startTime, duration);
                 backUpSubtask(subtask);
             } else {
-                Epic epic = new Epic(name, description, mainTaskId, status);
+                Epic epic = new Epic(name, description, mainTaskId, status, startTime, duration);
                 backUpEpic(epic);
             }
         } catch (IOException e) {
@@ -315,6 +303,22 @@ public class FileBackedTasksManager extends InMemoryTaskManager implements TaskM
         Epic epic = epicMap.get(id);
         epic.addSubtaskMap(subtask.getMainTaskId(), subtask);
         epicMap.put(id, epic);
+    }
+
+    private Duration backUpDuration(String duration) {
+        if (duration.equals("null")) {
+            return null;
+        } else {
+            return Duration.parse(duration);
+        }
+    }
+
+    private LocalDateTime backUpStartTime(String startTime) {
+        if (startTime.equals("null")) {
+            return null;
+        } else {
+            return LocalDateTime.parse(startTime);
+        }
     }
 
 

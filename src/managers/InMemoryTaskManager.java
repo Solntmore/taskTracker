@@ -3,13 +3,17 @@ package managers;
 import task.*;
 import interfaces.*;
 
+import javax.naming.directory.InvalidAttributesException;
 import java.io.IOException;
 import java.util.*;
+
+import static managers.Validator.validator;
 
 public class InMemoryTaskManager implements TaskManager {
     protected HashMap<Integer, Task> taskMap = new HashMap<>();
     protected HashMap<Integer, Subtask> subtaskMap = new HashMap<>();
     protected HashMap<Integer, Epic> epicMap = new HashMap<>();
+    protected Set<Task> prioritizedSet = new TreeSet<>();
 
     private int taskCounter = 0;
     HistoryManager inMemoryHistoryManager = Managers.getDefaultHistory();
@@ -38,12 +42,26 @@ public class InMemoryTaskManager implements TaskManager {
         return Objects.hash(taskMap, subtaskMap, epicMap, taskCounter);
     }
 
+    /* в методах, где по какой-то причине создание задачи невозможно или подобных случаях была идея выкидывать исключение,
+     * однако, такие исключения пришлось бы где-то обрабатывать, и делать это в классе проверки не логично, вроде бы как,
+     * это происходит на фронте. После обсуждений с наставником и студентами пришли к варианту, что возвращать null
+     * и писать текстовое сообщение будет для данной ситуации логично, поэтому во всех методах при каком-то варианте,
+     * когда нарушается сценарий возвращается null
+     */
     @Override
     public Object createTask(Task task) throws IOException {
-        task.setMainTaskId(incrementTaskCounter());
-        taskMap.put(task.getMainTaskId(), task);
-        return task;
+        try {
+            validator(task.getStartTime(), task.getDuration(), taskMap, subtaskMap);
+            task.setMainTaskId(incrementTaskCounter());
+            taskMap.put(task.getMainTaskId(), task);
+            addTaskToPrioritizedSet(task);
+            return task;
+        } catch (InvalidAttributesException e) {
+            System.out.println("Задачи не могут пересекаться во времени!");
+            return null;
+        }
     }
+
 
     @Override
     public Object createEpic(Epic epic) throws IOException {
@@ -54,14 +72,31 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Object createSubtask(Subtask subtask) throws IOException {
-        int id = subtask.getEpicId();
+        try {
+            validator(subtask.getStartTime(), subtask.getDuration(), taskMap, subtaskMap);
+            int id = subtask.getEpicId();
 
-        subtask.setMainTaskId(incrementTaskCounter());
-        subtaskMap.put(subtask.getMainTaskId(), subtask);
-        Epic epic = epicMap.get(id);
-        epic.addSubtaskMap(subtask.getMainTaskId(), subtask);
-        epicMap.put(id, epic);
-        return subtask;
+            Epic epic = epicMap.get(id);
+            if (epic != null) {
+                subtask.setMainTaskId(incrementTaskCounter());
+                subtaskMap.put(subtask.getMainTaskId(), subtask);
+
+                epic.addSubtaskMap(subtask.getMainTaskId(), subtask);
+                epic.getStartTime();
+                epic.getEndTime();
+                epic.getDuration();
+                epicMap.put(id, epic);
+                updateEpic(id);
+                addTaskToPrioritizedSet(subtask);
+                return subtask;
+            }
+            return null;
+
+
+        } catch (InvalidAttributesException e) {
+            System.out.println("Задачи не могут пересекаться во времени!");
+            return null;
+        }
     }
 
     @Override
@@ -70,7 +105,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public HashMap<Integer, Epic> showAllEpic() {
+    public HashMap<Integer, Epic> showAllEpics() {
         return epicMap;
     }
 
@@ -81,6 +116,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public HashMap<Integer, Task> deleteAllTasks() throws IOException {
+        removeAllTasksFromPrioritizedSet();
         taskMap.clear();
         return taskMap;
     }
@@ -95,6 +131,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public HashMap<Integer, Subtask> deleteAllSubtasks() throws IOException {
+        removeAllSubtasksFromPrioritizedSet();
         subtaskMap.clear();
         for (int i = 0; i < epicMap.size(); i++) {
             if (epicMap.containsKey(i)) {
@@ -107,22 +144,31 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public HashMap<Integer, Task> deleteTaskById(int id) throws IOException {
-        inMemoryHistoryManager.remove(id);
-        taskMap.remove(id);
-        return taskMap;
+        if (taskMap.containsKey(id)) {
+            removeTaskFromPrioritizedSet(taskMap.get(id));
+            inMemoryHistoryManager.remove(id);
+            taskMap.remove(id);
+            return taskMap;
+        }
+        return null;
     }
 
     @Override
     public HashMap<Integer, Epic> deleteEpicById(int id) throws IOException {
-        for (int i = 0; i < getTaskCounter(); i++) {
-            if (epicMap.containsKey(id) && subtaskMap.containsKey(i) && id == subtaskMap.get(i).getEpicId()) {
-                subtaskMap.remove(i);
-                inMemoryHistoryManager.remove(i);
+        if (epicMap.containsKey(id)) {
+            for (int i = 0; i < getTaskCounter(); i++) {
+                if (subtaskMap.containsKey(i) && id == subtaskMap.get(i).getEpicId()) {
+                    removeTaskFromPrioritizedSet(subtaskMap.get(i));
+                    subtaskMap.remove(i);
+                    inMemoryHistoryManager.remove(i);
+                }
             }
+
+            inMemoryHistoryManager.remove(id);
+            epicMap.remove(id);
+            return epicMap;
         }
-        inMemoryHistoryManager.remove(id);
-        epicMap.remove(id);
-        return epicMap;
+        return null;
     }
 
     @Override
@@ -134,36 +180,49 @@ public class InMemoryTaskManager implements TaskManager {
                 epic.removeFromSubtaskMap(id);
                 epicMap.put(epic.getMainTaskId(), epic);
                 inMemoryHistoryManager.remove(id);
+                removeTaskFromPrioritizedSet(subtaskMap.get(id));
                 subtaskMap.remove(id);
+                return subtaskMap;
             }
+            return subtaskMap;
         }
-        return subtaskMap;
+        return null;
+
     }
 
     @Override
     public Task showTaskById(int id) throws IOException {
         Task task = taskMap.get(id);
-        inMemoryHistoryManager.addTask(task);
-        return task;
+        if (task != null) {
+            inMemoryHistoryManager.addTask(task);
+            return task;
+        }
+        return null;
     }
 
     @Override
     public Epic showEpicById(int id) throws IOException {
         Epic epic = epicMap.get(id);
-        inMemoryHistoryManager.addTask(epic);
-        return epic;
+        if (epic != null) {
+            inMemoryHistoryManager.addTask(epic);
+            return epic;
+        }
+        return null;
     }
 
     @Override
     public Subtask showSubtaskById(int id) throws IOException {
         Subtask subtask = subtaskMap.get(id);
-        inMemoryHistoryManager.addTask(subtask);
-        return subtask;
+        if (subtask != null) {
+            inMemoryHistoryManager.addTask(subtask);
+            return subtask;
+        }
+        return null;
     }
 
     @Override
     public HashMap<Integer, Subtask> showSubtasksByEpicId(int id) throws IOException {
-        if (subtaskMap.containsKey(id)) {
+        if (epicMap.containsKey(id)) {
             Epic epic = epicMap.get(id);
             return epic.getSubtaskMap();
         } else {
@@ -175,7 +234,9 @@ public class InMemoryTaskManager implements TaskManager {
     public Task updateTask(int id, Task.Status status) throws IOException {
         if (taskMap.containsKey(id)) {
             Task task = taskMap.get(id);
-            task = new Task(task.getName(), task.getDescription(), id, status);
+            removeTaskFromPrioritizedSet(task);
+            task = new Task(task.getName(), task.getDescription(), id, status, task.getStartTime(), task.getDuration());
+            addTaskToPrioritizedSet(task);
             taskMap.put(id, task);
             return task;
         } else {
@@ -187,9 +248,12 @@ public class InMemoryTaskManager implements TaskManager {
     public Subtask updateSubtask(int id, Task.Status status) throws IOException {
         if (subtaskMap.containsKey(id)) {
             Subtask subtask = subtaskMap.get(id);
+            removeTaskFromPrioritizedSet(subtask);
             int epicId = subtask.getEpicId();
             Epic epic = epicMap.get(epicId);
-            subtask = new Subtask(subtask.getName(), subtask.getDescription(), epicId, status, id);
+            subtask = new Subtask(subtask.getName(), subtask.getDescription(), epicId, status, id,
+                    subtask.getStartTime(), subtask.getDuration());
+            addTaskToPrioritizedSet(subtask);
             subtaskMap.put(id, subtask);
             epic.addSubtaskMap(id, subtask);
             updateEpic(epicId);
@@ -254,6 +318,28 @@ public class InMemoryTaskManager implements TaskManager {
         return inMemoryHistoryManager.getHistory();
     }
 
+    private void addTaskToPrioritizedSet(Task task) {
+        prioritizedSet.add(task);
+    }
 
+    private void removeTaskFromPrioritizedSet(Task task) {
+        prioritizedSet.remove(task);
+    }
+
+    private void removeAllTasksFromPrioritizedSet() {
+        for (Task task : taskMap.values()) {
+            removeTaskFromPrioritizedSet(task);
+        }
+    }
+
+    private void removeAllSubtasksFromPrioritizedSet() {
+        for (Subtask subtask : subtaskMap.values()) {
+            removeTaskFromPrioritizedSet(subtask);
+        }
+    }
+
+    public Set<Task> getPrioritizedSet() {
+        return prioritizedSet;
+    }
 }
 

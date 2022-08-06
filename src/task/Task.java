@@ -1,19 +1,70 @@
 package task;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
-public class Task {
+public class Task implements Comparable<Task> {
     protected String name;
     protected String description;
     protected int mainTaskId;
     protected Status status;
+    protected LocalDateTime startTime;
+    protected Duration duration;
 
-    public Task(String name, String description, int mainTaskId, Status status) {
+    public Task(String name, String description, int mainTaskId, Status status, LocalDateTime startTime, Duration duration) {
         this.name = name;
         this.description = description;
         this.mainTaskId = mainTaskId;
         this.status = status;
+        this.duration = duration;
+        this.startTime = startTime;
     }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public LocalDateTime getEndTime() {
+        return startTime.plus(getDuration());
+    }
+
+    public Duration getDuration() {
+        return duration;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public void setDuration(Duration duration) {
+        this.duration = duration;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Task)) return false;
+        Task task = (Task) o;
+        if (startTime == null && duration == null) {
+            return getMainTaskId() == task.getMainTaskId() && getName().equals(task.getName())
+                    && getDescription().equals(task.getDescription()) && getStatus() == task.getStatus();
+        }
+        return getMainTaskId() == task.getMainTaskId() && getName().equals(task.getName())
+                && getDescription().equals(task.getDescription()) && getStatus() == task.getStatus()
+                && getStartTime().equals(task.getStartTime()) && getDuration().equals(task.getDuration());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getName(), getDescription(), getMainTaskId(), getStatus(), getStartTime(), getDuration());
+    }
+
+    @Override
+    public int compareTo(Task o) {
+        return this.getStartTime().compareTo(o.getStartTime());
+    }
+
 
     public enum Status {
         NEW, IN_PROGRESS, DONE;
@@ -31,31 +82,19 @@ public class Task {
     }
 
 
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Task task = (Task) o;
-        return mainTaskId == task.mainTaskId && Objects.equals(name, task.name) &&
-                Objects.equals(description, task.description) && Objects.equals(status, task.status);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name, description, mainTaskId, status);
-    }
-
     @Override
     public String toString() {
         return "Название задачи: " + name + '\'' +
                 " описание задачи: " + description + '\'' +
                 " ID основной задачи: " + mainTaskId +
-                " статус задачи: " + status +
+                " статус задачи: " + status + " дата начала: " +
+                startTime + " продолжительность задачи: " + duration +
                 '.';
     }
 
     public String toCsvString() {
         return getMainTaskId() + "," + "TASK," + getName() + ","
-                + getStatus() + "," + getDescription() + "," + "\n";
+                + getStatus() + "," + getDescription() + "," + getStartTime() + "," + getDuration() + "\n";
     }
 
     public Task.Status getStatus() {
