@@ -1,4 +1,4 @@
-package Test;
+package test;
 
 import interfaces.HistoryManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 import static managers.Managers.getDefaultHistory;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class InMemoryHistoryManager {
+public class InMemoryHistoryManagerTest {
     HistoryManager taskManager;
     static Task task;
     static Epic epic;
@@ -56,6 +56,20 @@ public class InMemoryHistoryManager {
         for (int i = 0; i < 2; i++) {
             taskManager.addTask(task);
         }
+        assertEquals(taskManager.getHistory(), testManager.getHistory(), "История не совпадает.");
+    }
+
+    //добавлено в соответствии с "можно еще добавить простой тест, где будет проверятся,
+    // что в историю добавилось несколько задач, и они все в стории сохранились "
+    @Test
+    void addThreeTasksInHistory() {
+        HistoryManager testManager = getDefaultHistory();
+        taskManager.addTask(task);
+        taskManager.addTask(epic);
+        taskManager.addTask(subtask1);
+        testManager.addTask(task);
+        testManager.addTask(epic);
+        testManager.addTask(subtask1);
         assertEquals(taskManager.getHistory(), testManager.getHistory(), "История не совпадает.");
     }
 

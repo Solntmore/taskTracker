@@ -1,4 +1,4 @@
-package Test;
+package test;
 
 import managers.FileBackedTasksManager;
 import managers.InMemoryTaskManager;
@@ -10,7 +10,7 @@ import task.Task;
 import java.time.Duration;
 
 
-public class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
+public class InMemoryBaseTaskManagerTest extends test.BaseTaskManagerTest<InMemoryTaskManager> {
     @BeforeEach
     void beforeEach() {
         taskManager = new FileBackedTasksManager("taskManager.csv");

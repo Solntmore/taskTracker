@@ -1,4 +1,4 @@
-package Test;
+package test;
 
 import interfaces.TaskManager;
 import org.junit.jupiter.api.Test;
@@ -15,7 +15,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static task.Task.Status.*;
 
-abstract class TaskManagerTest<T extends TaskManager> {
+abstract class BaseTaskManagerTest<T extends TaskManager> {
 
     T taskManager;
     static Task task;
@@ -28,12 +28,14 @@ abstract class TaskManagerTest<T extends TaskManager> {
     final static LocalDateTime DAY_3 = LocalDateTime.of(2022, 6, 3, 0, 0);
     final static LocalDateTime DAY_4 = LocalDateTime.of(2022, 6, 4, 0, 0);
 
+    //строчка 38 тестирует создание задачи с пересечением во времени с другой, возвращается null, значит задача не
+    //создана из-за пересечения
     @Test
-    void createTask() throws IOException {
+    void createTaskTest() throws IOException {
 
         Task newTask = (Task) taskManager.createTask(task);
         Task savedTask = taskManager.showTaskById(newTask.getMainTaskId());
-        assertNull(taskManager.createTask(task));
+        assertNull(taskManager.createTask(task), "Задача не создана, так как пересекается во времени с другой");
         assertNotNull(savedTask, "Задача не найдена.");
         assertEquals(newTask, savedTask, "Задачи не совпадают.");
 
@@ -45,7 +47,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void createEpic() throws IOException {
+    void createEpicTest() throws IOException {
         Epic newEpic = (Epic) taskManager.createEpic(epic);
         Epic savedEpic = taskManager.showEpicById(newEpic.getMainTaskId());
         assertNotNull(savedEpic, "Задача не найдена.");
@@ -59,7 +61,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void createSubtask() throws IOException {
+    void createSubtaskTest() throws IOException {
         assertNull(taskManager.createSubtask(subtask1));
         Epic newEpic = (Epic) taskManager.createEpic(epic);
         Subtask newSubtask = (Subtask) taskManager.createSubtask(subtask1);
@@ -75,7 +77,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void showAllTasks() throws IOException {
+    void showAllTasksTest() throws IOException {
         HashMap<Integer, Task> taskMap = taskManager.showAllTasks();
         HashMap<Integer, Task> newTaskMap = new HashMap<>();
         assertEquals(taskMap, newTaskMap, "Список задач не совпадает.");
@@ -85,7 +87,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void showAllEpics() throws IOException {
+    void showAllEpicsTest() throws IOException {
         HashMap<Integer, Epic> epicMap = taskManager.showAllEpics();
         HashMap<Integer, Epic> newEpicMap = new HashMap<>();
         assertEquals(epicMap, newEpicMap, "Список задач не совпадает.");
@@ -95,7 +97,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void showAllSubtasks() throws IOException {
+    void showAllSubtasksTest() throws IOException {
         HashMap<Integer, Subtask> subtaskMap = taskManager.showAllSubtasks();
         HashMap<Integer, Subtask> newSubtaskMap = new HashMap<>();
         assertEquals(subtaskMap, newSubtaskMap, "Список задач не совпадает.");
@@ -106,7 +108,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void deleteAllTasks() throws IOException {
+    void deleteAllTasksTest() throws IOException {
         taskManager.createTask(task);
         HashMap<Integer, Task> taskMap = taskManager.showAllTasks();
         assertEquals(1, taskMap.size(), "Список задач заполнен неправильно.");
@@ -116,7 +118,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void deleteAllEpics() throws IOException {
+    void deleteAllEpicsTest() throws IOException {
         taskManager.createEpic(epic);
         HashMap<Integer, Epic> epicMap = taskManager.showAllEpics();
         assertEquals(1, epicMap.size(), "Список задач заполнен неправильно.");
@@ -125,7 +127,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void deleteAllSubtasks() throws IOException {
+    void deleteAllSubtasksTest() throws IOException {
         taskManager.createEpic(epic);
         taskManager.createSubtask(subtask1);
         HashMap<Integer, Subtask> subtaskMap = taskManager.showAllSubtasks();
@@ -135,7 +137,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void deleteTaskById() throws IOException {
+    void deleteTaskByIdTest() throws IOException {
         assertNull(taskManager.deleteTaskById(1), "Нет задачи с таким id");
         HashMap<Integer, Task> taskMap = new HashMap<>();
         Task newTask = (Task) taskManager.createTask(task);
@@ -147,7 +149,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void deleteSubtaskById() throws IOException {
+    void deleteSubtaskByIdTest() throws IOException {
         assertNull(taskManager.deleteSubtaskById(1), "Нет задачи с таким id");
         taskManager.createEpic(epic);
 
@@ -161,7 +163,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void deleteEpicById() throws IOException {
+    void deleteEpicByIdTest() throws IOException {
         assertNull(taskManager.deleteEpicById(1), "Нет задачи с таким id");
         HashMap<Integer, Epic> epicMap = new HashMap<>();
         Epic newEpic = (Epic) taskManager.createEpic(epic);
@@ -173,21 +175,21 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void showTaskById() throws IOException {
+    void showTaskByIdTest() throws IOException {
         assertNull(taskManager.showTaskById(1), "Нет задачи с таким id");
         Task newTask = (Task) taskManager.createTask(task);
         assertEquals(newTask, taskManager.showTaskById(newTask.getMainTaskId()), "Задачи не совпадают");
     }
 
     @Test
-    void showEpicById() throws IOException {
+    void showEpicByIdTest() throws IOException {
         assertNull(taskManager.showEpicById(1), "Нет задачи с таким id");
         Epic newEpic = (Epic) taskManager.createEpic(epic);
         assertEquals(newEpic, taskManager.showEpicById(newEpic.getMainTaskId()), "Задачи не совпадают");
     }
 
     @Test
-    void showSubtaskById() throws IOException {
+    void showSubtaskByIdTest() throws IOException {
         assertNull(taskManager.showSubtaskById(1), "Нет задачи с таким id");
         taskManager.createEpic(epic);
         Subtask newSubtask = (Subtask) taskManager.createSubtask(subtask1);
@@ -195,7 +197,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void showSubtasksByEpicId() throws IOException {
+    void showSubtasksByEpicIdTest() throws IOException {
         assertNull(taskManager.showSubtaskById(1), "Нет задачи с таким id");
         Epic newEpic = (Epic) taskManager.createEpic(epic);
         Subtask newSubtask1 = (Subtask) taskManager.createSubtask(subtask1);
@@ -207,7 +209,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void updateTask() throws IOException {
+    void updateTaskTest() throws IOException {
         assertNull(taskManager.updateTask(1, Task.Status.DONE), "Нет задачи с таким id");
         Task newTask = (Task) taskManager.createTask(task);
         assertEquals(NEW, newTask.getStatus(), "Статусы задач не совпадают");
@@ -216,7 +218,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void updateSubtask() throws IOException {
+    void updateSubtaskTest() throws IOException {
         assertNull(taskManager.updateSubtask(1, Task.Status.DONE), "Нет задачи с таким id");
         Epic newEpic = (Epic) taskManager.createEpic(epic);
         Subtask newSubtask = (Subtask) taskManager.createSubtask(subtask1);
@@ -226,7 +228,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void updateEpic() throws IOException {
+    void updateEpicTest() throws IOException {
         Epic newEpic = (Epic) taskManager.createEpic(epic);
         assertEquals(NEW, newEpic.getStatus(), "Статусы задач не совпадают");
         taskManager.createSubtask(subtask1);
@@ -240,7 +242,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void getHistory() throws IOException {
+    void getHistoryTest() throws IOException {
         List<Task> newHistoryList = new ArrayList<>();
         assertEquals(newHistoryList, taskManager.getHistory(), "Списки не равны");
         newHistoryList.add((Task) taskManager.createEpic(epic));

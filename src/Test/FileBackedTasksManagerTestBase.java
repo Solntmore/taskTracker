@@ -1,4 +1,4 @@
-package Test;
+package test;
 
 import managers.FileBackedTasksManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,7 +15,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class FileBackedTasksManagerTest extends TaskManagerTest<FileBackedTasksManager> {
+public class FileBackedTasksManagerTestBase extends test.BaseTaskManagerTest<FileBackedTasksManager> {
 
     @BeforeEach
     void beforeEach() {

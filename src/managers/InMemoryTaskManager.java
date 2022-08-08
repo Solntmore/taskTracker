@@ -1,13 +1,13 @@
 package managers;
 
+import exceptions.InvalidTimeException;
 import task.*;
 import interfaces.*;
 
-import javax.naming.directory.InvalidAttributesException;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.*;
-
-import static managers.Validator.validator;
 
 public class InMemoryTaskManager implements TaskManager {
     protected HashMap<Integer, Task> taskMap = new HashMap<>();
@@ -51,13 +51,13 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Object createTask(Task task) throws IOException {
         try {
-            validator(task.getStartTime(), task.getDuration(), taskMap, subtaskMap);
+            taskTimeParameterValidator(task.getStartTime(), task.getDuration());
             task.setMainTaskId(incrementTaskCounter());
             taskMap.put(task.getMainTaskId(), task);
             addTaskToPrioritizedSet(task);
             return task;
-        } catch (InvalidAttributesException e) {
-            System.out.println("Задачи не могут пересекаться во времени!");
+        } catch (InvalidTimeException e) {
+            System.out.println(e.getMessage());
             return null;
         }
     }
@@ -73,7 +73,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Object createSubtask(Subtask subtask) throws IOException {
         try {
-            validator(subtask.getStartTime(), subtask.getDuration(), taskMap, subtaskMap);
+            taskTimeParameterValidator(subtask.getStartTime(), subtask.getDuration());
             int id = subtask.getEpicId();
 
             Epic epic = epicMap.get(id);
@@ -93,8 +93,8 @@ public class InMemoryTaskManager implements TaskManager {
             return null;
 
 
-        } catch (InvalidAttributesException e) {
-            System.out.println("Задачи не могут пересекаться во времени!");
+        } catch (InvalidTimeException e) {
+            System.out.println(e.getMessage());
             return null;
         }
     }
@@ -336,6 +336,31 @@ public class InMemoryTaskManager implements TaskManager {
         for (Subtask subtask : subtaskMap.values()) {
             removeTaskFromPrioritizedSet(subtask);
         }
+    }
+
+    private void taskTimeParameterValidator(LocalDateTime startTime, Duration duration) {
+        LocalDateTime endTime = startTime.plus(duration);
+        int counter = 0;
+        HashMap<Integer, Task> allTaskMap = new HashMap<>();
+        allTaskMap.putAll(taskMap);
+        allTaskMap.putAll(subtaskMap);
+        if (!allTaskMap.isEmpty()) {
+            for (Task task : allTaskMap.values()) {
+                LocalDateTime thisStartTime = task.getStartTime();
+                LocalDateTime thisEndTime = task.getEndTime();
+                if (startTime.isBefore(thisStartTime) && endTime.isBefore(thisStartTime))
+                    counter++;
+                if (startTime.isAfter(thisEndTime) && endTime.isAfter(thisEndTime))
+                    counter++;
+            }
+        }
+        if (counter == allTaskMap.size())
+            return;
+        if (allTaskMap.isEmpty())
+            return;
+
+        throw new InvalidTimeException("Задача пересекается по времени с другими, нельзя выполнять сразу " +
+                "несколько задач одновременно");
     }
 
     public Set<Task> getPrioritizedSet() {
