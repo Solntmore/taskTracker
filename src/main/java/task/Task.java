@@ -65,7 +65,6 @@ public class Task implements Comparable<Task> {
         return this.getStartTime().compareTo(o.getStartTime());
     }
 
-
     public enum Status {
         NEW, IN_PROGRESS, DONE;
 

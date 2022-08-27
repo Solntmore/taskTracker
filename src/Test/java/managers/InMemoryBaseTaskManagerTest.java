@@ -1,7 +1,5 @@
-package test;
+package managers;
 
-import managers.FileBackedTasksManager;
-import managers.InMemoryTaskManager;
 import org.junit.jupiter.api.BeforeEach;
 import task.Epic;
 import task.Subtask;
@@ -10,7 +8,7 @@ import task.Task;
 import java.time.Duration;
 
 
-public class InMemoryBaseTaskManagerTest extends test.BaseTaskManagerTest<InMemoryTaskManager> {
+public class InMemoryBaseTaskManagerTest extends BaseTaskManagerTest<InMemoryTaskManager> {
     @BeforeEach
     void beforeEach() {
         taskManager = new FileBackedTasksManager("taskManager.csv");

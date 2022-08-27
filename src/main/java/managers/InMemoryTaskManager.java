@@ -231,11 +231,11 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Task updateTask(int id, Task.Status status) throws IOException {
+    public Task updateTask(int id, Task task) throws IOException {
         if (taskMap.containsKey(id)) {
-            Task task = taskMap.get(id);
-            removeTaskFromPrioritizedSet(task);
-            task = new Task(task.getName(), task.getDescription(), id, status, task.getStartTime(), task.getDuration());
+            Task oldTask = taskMap.get(id);
+            task.setMainTaskId(id);
+            removeTaskFromPrioritizedSet(oldTask);
             addTaskToPrioritizedSet(task);
             taskMap.put(id, task);
             return task;
@@ -245,14 +245,14 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Subtask updateSubtask(int id, Task.Status status) throws IOException {
+    public Subtask updateSubtask(int id, Subtask subtask) throws IOException {
         if (subtaskMap.containsKey(id)) {
-            Subtask subtask = subtaskMap.get(id);
-            removeTaskFromPrioritizedSet(subtask);
+            Subtask oldSubtask = subtaskMap.get(id);
+            removeTaskFromPrioritizedSet(oldSubtask);
             int epicId = subtask.getEpicId();
             Epic epic = epicMap.get(epicId);
-            subtask = new Subtask(subtask.getName(), subtask.getDescription(), epicId, status, id,
-                    subtask.getStartTime(), subtask.getDuration());
+            subtask.setMainTaskId(id);
+            subtask.setEpicId(epicId);
             addTaskToPrioritizedSet(subtask);
             subtaskMap.put(id, subtask);
             epic.addSubtaskMap(id, subtask);
@@ -318,7 +318,7 @@ public class InMemoryTaskManager implements TaskManager {
         return inMemoryHistoryManager.getHistory();
     }
 
-    private void addTaskToPrioritizedSet(Task task) {
+    protected void addTaskToPrioritizedSet(Task task) {
         prioritizedSet.add(task);
     }
 
@@ -363,6 +363,7 @@ public class InMemoryTaskManager implements TaskManager {
                 "несколько задач одновременно");
     }
 
+    @Override
     public Set<Task> getPrioritizedSet() {
         return prioritizedSet;
     }

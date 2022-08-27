@@ -1,4 +1,4 @@
-package test;
+package managers;
 
 import interfaces.TaskManager;
 import org.junit.jupiter.api.Test;
@@ -7,10 +7,9 @@ import task.Subtask;
 import task.Task;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static task.Task.Status.*;
@@ -28,11 +27,8 @@ abstract class BaseTaskManagerTest<T extends TaskManager> {
     final static LocalDateTime DAY_3 = LocalDateTime.of(2022, 6, 3, 0, 0);
     final static LocalDateTime DAY_4 = LocalDateTime.of(2022, 6, 4, 0, 0);
 
-    //строчка 38 тестирует создание задачи с пересечением во времени с другой, возвращается null, значит задача не
-    //создана из-за пересечения
     @Test
     void createTaskTest() throws IOException {
-
         Task newTask = (Task) taskManager.createTask(task);
         Task savedTask = taskManager.showTaskById(newTask.getMainTaskId());
         assertNull(taskManager.createTask(task), "Задача не создана, так как пересекается во времени с другой");
@@ -210,20 +206,23 @@ abstract class BaseTaskManagerTest<T extends TaskManager> {
 
     @Test
     void updateTaskTest() throws IOException {
-        assertNull(taskManager.updateTask(1, Task.Status.DONE), "Нет задачи с таким id");
+        Task updateTask = new Task("Задача-1", "описание", 1, DONE, DAY_1, Duration.ofMinutes(1439));
+        assertNull(taskManager.updateTask(1, updateTask), "Нет задачи с таким id");
         Task newTask = (Task) taskManager.createTask(task);
         assertEquals(NEW, newTask.getStatus(), "Статусы задач не совпадают");
-        newTask = taskManager.updateTask(1, Task.Status.DONE);
+        newTask = taskManager.updateTask(1, updateTask);
         assertEquals(DONE, newTask.getStatus(), "Статусы задач не совпадают");
     }
 
     @Test
     void updateSubtaskTest() throws IOException {
-        assertNull(taskManager.updateSubtask(1, Task.Status.DONE), "Нет задачи с таким id");
+        Subtask updateSubtask = new Subtask("Подзадача эпика-1", "описание",
+                1, Task.Status.DONE, 0, DAY_2, Duration.ofMinutes(1439));
+        assertNull(taskManager.updateSubtask(1, updateSubtask), "Нет задачи с таким id");
         Epic newEpic = (Epic) taskManager.createEpic(epic);
         Subtask newSubtask = (Subtask) taskManager.createSubtask(subtask1);
         assertEquals(NEW, newSubtask.getStatus(), "Статусы задач не совпадают");
-        newSubtask = taskManager.updateSubtask(2, Task.Status.DONE);
+        newSubtask = taskManager.updateSubtask(2, updateSubtask);
         assertEquals(DONE, newSubtask.getStatus(), "Статусы задач не совпадают");
     }
 
@@ -235,8 +234,14 @@ abstract class BaseTaskManagerTest<T extends TaskManager> {
         taskManager.createSubtask(subtask2);
         newEpic = taskManager.showEpicById(1);
         assertEquals(IN_PROGRESS, newEpic.getStatus(), "Статусы задач не совпадают");
-        taskManager.updateSubtask(2, DONE);
-        taskManager.updateSubtask(3, DONE);
+
+        Subtask updateSubtask2 = new Subtask("Подзадача эпика-2", "описание", 1,
+                Task.Status.DONE, 0, DAY_3, Duration.ofMinutes(1439));
+        Subtask updateSubtask3 = new Subtask("Подзадача эпика-3", "описание", 1,
+                Task.Status.DONE, 0, DAY_4, Duration.ofMinutes(1439));
+
+        taskManager.updateSubtask(2, updateSubtask2);
+        taskManager.updateSubtask(3, updateSubtask3);
         newEpic = taskManager.showEpicById(1);
         assertEquals(DONE, newEpic.getStatus(), "Статусы задач не совпадают");
     }
@@ -256,5 +261,22 @@ abstract class BaseTaskManagerTest<T extends TaskManager> {
         List<Task> historyList = taskManager.getHistory();
 
         assertEquals(newHistoryList, historyList, "Списки не равны");
+    }
+
+    @Test
+    void getPrioritizedSetTest() throws IOException {
+        taskManager.createEpic(epic);
+        taskManager.createTask(task);
+        taskManager.createSubtask(subtask1);
+        taskManager.createSubtask(subtask2);
+        taskManager.createSubtask(subtask3);
+        Set<Task> newPrioritizedSet = new TreeSet<>();
+        newPrioritizedSet.add(epic);
+        newPrioritizedSet.add(task);
+        newPrioritizedSet.add(subtask1);
+        newPrioritizedSet.add(subtask2);
+        newPrioritizedSet.add(subtask3);
+        assertEquals(newPrioritizedSet, taskManager.getPrioritizedSet(), "Списки не равны");
+
     }
 }

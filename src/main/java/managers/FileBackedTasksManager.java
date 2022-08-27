@@ -1,26 +1,35 @@
 package managers;
 
+import exceptions.ManagerSaveException;
 import interfaces.TaskManager;
-import task.*;
-import exceptions.*;
+import task.Epic;
+import task.Subtask;
+import task.Task;
+import task.TaskType;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
+import static helpTools.Сonstants.*;
 import static task.Task.Status.statusSet;
 
 public class FileBackedTasksManager extends InMemoryTaskManager implements TaskManager {
 
     private final String backUpFile;
 
+
+    public FileBackedTasksManager() {
+        backUpFile = BACK_UP_FILE;
+    }
+
     public FileBackedTasksManager(String path) {
         backUpFile = path;
     }
 
-    private static final String BACK_UP_FILE = "taskManager.csv";
 
     public static void main(String[] args) {
         FileBackedTasksManager taskManager = Managers.getDefault(BACK_UP_FILE);
@@ -144,15 +153,15 @@ public class FileBackedTasksManager extends InMemoryTaskManager implements TaskM
     }
 
     @Override
-    public Task updateTask(int id, Task.Status status) throws IOException {
-        Task taskOverride = super.updateTask(id, status);
+    public Task updateTask(int id, Task task) throws IOException {
+        Task taskOverride = super.updateTask(id, task);
         save();
         return taskOverride;
     }
 
     @Override
-    public Subtask updateSubtask(int id, Task.Status status) throws IOException {
-        Subtask subtaskOverride = super.updateSubtask(id, status);
+    public Subtask updateSubtask(int id, Subtask subtask) throws IOException {
+        Subtask subtaskOverride = super.updateSubtask(id, subtask);
         save();
         return subtaskOverride;
     }
@@ -164,8 +173,8 @@ public class FileBackedTasksManager extends InMemoryTaskManager implements TaskM
         return epicOverride;
     }
 
-    private void save() {
-        try (Writer fileWriter = new FileWriter(backUpFile, StandardCharsets.UTF_8)) {
+    protected void save() {
+        try (Writer fileWriter = new FileWriter(backUpFile, UTF_8)) {
             fileWriter.write("id,type,name,status,description,startTime,duration,epic\n");
 
             for (int i = 0; i <= getTaskCounter(); i++) {
@@ -189,7 +198,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager implements TaskM
             List<Task> taskIdHistoryList = inMemoryHistoryManager.getHistory();
             for (Task task : taskIdHistoryList) {
                 int id = task.getMainTaskId();
-                fileWriter.write(id + ",");
+                fileWriter.write(id + DELIMITER);
             }
 
         } catch (IOException e) {
@@ -200,18 +209,17 @@ public class FileBackedTasksManager extends InMemoryTaskManager implements TaskM
 
     //вспомогательный внутренний метод класса, который из файла вытаскивает данные и раскладывает их по нужным мапам
     //и листам.
-    private void recoveryFromFile() {
-        try (BufferedReader br = new BufferedReader(new FileReader(backUpFile, StandardCharsets.UTF_8))) {
+    protected void recoveryFromFile() {
+        try (BufferedReader br = new BufferedReader(new FileReader(backUpFile, UTF_8))) {
 
             while (br.ready()) {
                 String line = br.readLine();
-                String[] lineValue = line.split(",");
+                String[] lineValue = line.split(DELIMITER);
                 if ((!lineValue[0].isEmpty() && lineValue.length > 1)) {
                     if (lineValue[1].equals(TaskType.TASK.name()) || lineValue[1].equals(TaskType.SUBTASK.name())
                             || lineValue[1].equals(TaskType.EPIC.name())) {
                         fromString(line);
                         recoveryTaskCounter(Integer.parseInt(lineValue[0]));
-
                     }
                     if (isNumeric(lineValue[0]) && isNumeric(lineValue[1])) {
                         makeTaskById(lineValue);

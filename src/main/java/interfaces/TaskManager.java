@@ -5,6 +5,7 @@ import task.*;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 public interface TaskManager {
 
@@ -40,13 +41,15 @@ public interface TaskManager {
 
     HashMap<Integer, Subtask> showSubtasksByEpicId(int id) throws IOException;
 
-    Task updateTask(int id, Task.Status status) throws IOException;
+    Task updateTask(int id, Task task) throws IOException;
 
-    Subtask updateSubtask(int id, Task.Status status) throws IOException;
+    Subtask updateSubtask(int id, Subtask subtask) throws IOException;
 
     Epic updateEpic(int epicId) throws IOException;
 
     List<Task> getHistory();
+
+    Set<Task> getPrioritizedSet();
 
 
 }

@@ -1,6 +1,7 @@
-package test;
+package managers;
 
-import managers.FileBackedTasksManager;
+import com.google.gson.Gson;
+import helpTools.Utils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import task.Epic;
@@ -15,7 +16,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class FileBackedTasksManagerTestBase extends test.BaseTaskManagerTest<FileBackedTasksManager> {
+public class FileBackedTasksManagerTestBase extends BaseTaskManagerTest<FileBackedTasksManager> {
 
     @BeforeEach
     void beforeEach() {
@@ -38,20 +39,32 @@ public class FileBackedTasksManagerTestBase extends test.BaseTaskManagerTest<Fil
         taskManager.deleteAllEpics();
         taskManager.deleteAllSubtasks();
         FileBackedTasksManager loadTaskManager = taskManager.loadFromFile("taskManager.csv");
+        assert loadTaskManager != null;
         assertEquals(taskManager.showAllTasks(), loadTaskManager.showAllTasks());
         assertEquals(taskManager.showAllSubtasks(), loadTaskManager.showAllSubtasks());
         assertEquals(taskManager.showAllEpics(), loadTaskManager.showAllEpics());
+        Gson gson = Utils.getGson();
+        System.out.println(gson.toJson(epic));
+        System.out.println(gson.toJson("\n"));
+        System.out.println(gson.toJson(subtask1));
+        System.out.println(gson.toJson("\n"));
+        System.out.println(gson.toJson(subtask2));
+        System.out.println(gson.toJson("\n"));
+        System.out.println(gson.toJson(subtask3));
+        System.out.println(gson.toJson("\n"));
+
     }
 
     @Test
     void testWithEpicWithoutSubtasks() throws IOException {
         taskManager.createEpic(epic);
         FileBackedTasksManager loadTaskManager = taskManager.loadFromFile("taskManager.csv");
+        assert loadTaskManager != null;
         assertEquals(taskManager.showAllEpics(), loadTaskManager.showAllEpics());
     }
 
     @Test
-    void testWithEmptyHistoryList() throws IOException {
+    void testWithEmptyHistoryList() {
         List<Task> newHistoryList = new ArrayList<>();
         assertEquals(newHistoryList, taskManager.getHistory(), "Списки не равны");
     }
