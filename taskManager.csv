@@ -1,3 +1,5 @@
 id,type,name,status,description,startTime,duration,epic
+1,EPIC,Эпик-1,NEW,описание,2022-06-02T00:00,PT-2084H-4M-41.4196358S
+2,SUBTASK,Подзадача эпика-1,NEW,описание,2022-06-02T00:00,PT23H59M,1
 
-1,
+1,2,

@@ -1,4 +1,4 @@
-package Server;
+package server;
 
 
 import managers.FileBackedTasksManager;
@@ -6,7 +6,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import server.HttpTaskServer;
 
 import java.io.IOException;
 import java.net.URI;
@@ -29,6 +28,10 @@ public class HttpTaskServerTest {
     private static final String jsonEpic = "{\"subtaskMap\":{},\"endTime\":\"2022-08-27T20:04:41.4196358\",\"name\"" +
             ":\"Эпик-1\",\"description\":\"описание\",\"mainTaskId\":1,\"status\":\"NEW\",\"startTime\"" +
             ":\"2022-08-27T20:04:41.4196358\",\"duration\":null}";
+
+    private static final String jsonSubtask1 = "{\"epicId\":1,\"name\":\"Подзадача эпика-1\",\"description\":\"описание\"" +
+            ",\"mainTaskId\":0,\"status\":\"NEW\",\"startTime\":\"2022-06-02T00:00:00\",\"duration\":{\"seconds\"" +
+            ":86340,\"nanos\":0}}";
     private static final String updatedJsonSubtask1 = "{\"epicId\":1,\"name\":\"Измененная подзадача эпика-1\"" +
             ",\"description\":\"описание\",\"mainTaskId\":0,\"status\":\"NEW\",\"startTime\":\"2022-06-02T00:00:00\"" +
             ",\"duration\":{\"seconds\":86340,\"nanos\":0}}";
@@ -65,29 +68,34 @@ public class HttpTaskServerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals("POST", request.method(), "Неверный метод запроса.");
         assertEquals(200, response.statusCode(), "Код обработки запроса неверен.");
+
         /*Проверка просмотра всех задач */
         url = URI.create("http://localhost:8080/tasks/task");
         request = HttpRequest.newBuilder().uri(url).GET().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals("GET", request.method(), "Неверный метод запроса.");
         assertEquals(200, response.statusCode(), "Код обработки запроса неверен.");
+
         /*Проверка просмотра задачи по id */
         url = URI.create("http://localhost:8080/tasks/task/?id=1");
         request = HttpRequest.newBuilder().uri(url).GET().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals("GET", request.method(), "Неверный метод запроса.");
         assertEquals(200, response.statusCode(), "Код обработки запроса неверен.");
+
         /*Проверка удаления всех задач */
         url = URI.create("http://localhost:8080/tasks/task");
         request = HttpRequest.newBuilder().uri(url).DELETE().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals("DELETE", request.method(), "Неверный метод запроса.");
         assertEquals(200, response.statusCode(), "Код обработки запроса неверен.");
+
         /*Повторное создание задачи, для проверки обновления и удаления по id */
         url = URI.create("http://localhost:8080/tasks/task");
         body = HttpRequest.BodyPublishers.ofString(jsonTask);
         request = HttpRequest.newBuilder().uri(url).POST(body).build();
         client.send(request, HttpResponse.BodyHandlers.ofString());
+
         /*Повторное создание задачи, для проверки удаления по id */
         url = URI.create("http://localhost:8080/tasks/task/?id=2");
         body = HttpRequest.BodyPublishers.ofString(jsonTask2);
@@ -95,28 +103,25 @@ public class HttpTaskServerTest {
         client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals("POST", request.method(), "Неверный метод запроса.");
         assertEquals(200, response.statusCode(), "Код обработки запроса неверен.");
+
         /*Проверка удаления задачи по id */
         url = URI.create("http://localhost:8080/tasks/task/?id=2");
         request = HttpRequest.newBuilder().uri(url).DELETE().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals("DELETE", request.method(), "Неверный метод запроса.");
         assertEquals(200, response.statusCode(), "Код обработки запроса неверен.");
-
-
     }
 
     @Test
-    void handleTasksAndSubtasksTest() throws IOException, InterruptedException {
+    void handleTasksAndSubtasksCreateShowTest() throws IOException, InterruptedException {
         /*Проверка создания подзадачи без эпика */
         URI url = URI.create("http://localhost:8080/tasks/subtask");
-        String jsonSubtask1 = "{\"epicId\":1,\"name\":\"Подзадача эпика-1\",\"description\":\"описание\"" +
-                ",\"mainTaskId\":0,\"status\":\"NEW\",\"startTime\":\"2022-06-02T00:00:00\",\"duration\":{\"seconds\"" +
-                ":86340,\"nanos\":0}}";
         HttpRequest.BodyPublisher body = HttpRequest.BodyPublishers.ofString(jsonSubtask1);
         HttpRequest request = HttpRequest.newBuilder().uri(url).POST(body).build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals("POST", request.method(), "Неверный метод запроса.");
         assertEquals(400, response.statusCode(), "Код обработки запроса неверен.");
+
         /*Проверка создания эпика */
         url = URI.create("http://localhost:8080/tasks/epic");
         body = HttpRequest.BodyPublishers.ofString(jsonEpic);
@@ -124,6 +129,7 @@ public class HttpTaskServerTest {
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals("POST", request.method(), "Неверный метод запроса.");
         assertEquals(200, response.statusCode(), "Код обработки запроса неверен.");
+
         /*Проверка создания подзадачи с существующим эпиком */
         url = URI.create("http://localhost:8080/tasks/subtask");
         body = HttpRequest.BodyPublishers.ofString(jsonSubtask1);
@@ -131,37 +137,64 @@ public class HttpTaskServerTest {
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals("POST", request.method(), "Неверный метод запроса.");
         assertEquals(200, response.statusCode(), "Код обработки запроса неверен.");
+
         /*Проверка просмотра всех эпиков */
         url = URI.create("http://localhost:8080/tasks/epic");
         request = HttpRequest.newBuilder().uri(url).GET().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals("GET", request.method(), "Неверный метод запроса.");
         assertEquals(200, response.statusCode(), "Код обработки запроса неверен.");
+
         /*Проверка просмотра всех подзадач */
         url = URI.create("http://localhost:8080/tasks/subtask");
         request = HttpRequest.newBuilder().uri(url).GET().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals("GET", request.method(), "Неверный метод запроса.");
         assertEquals(200, response.statusCode(), "Код обработки запроса неверен.");
+
         /*Проверка просмотра эпика по id */
         url = URI.create("http://localhost:8080/tasks/epic/?id=1");
         request = HttpRequest.newBuilder().uri(url).GET().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals("GET", request.method(), "Неверный метод запроса.");
         assertEquals(200, response.statusCode(), "Код обработки запроса неверен.");
+
         /*Проверка просмотра подзадачи по id */
         url = URI.create("http://localhost:8080/tasks/subtask/?id=2");
         request = HttpRequest.newBuilder().uri(url).GET().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals("GET", request.method(), "Неверный метод запроса.");
         assertEquals(200, response.statusCode(), "Код обработки запроса неверен.");
+
         /*Проверка просмотра подзадачи по EpicId */
         url = URI.create("http://localhost:8080/tasks/subtask/epic/?id=1");
         request = HttpRequest.newBuilder().uri(url).GET().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals("GET", request.method(), "Неверный метод запроса.");
         assertEquals(200, response.statusCode(), "Код обработки запроса неверен.");
+
+
+
+    }
+
+    @Test
+    void handleTasksAndSubtasksUpdateDeleteTest() throws IOException, InterruptedException {
+        /*Создание эпика для дальнейших тестов */
+        URI url = URI.create("http://localhost:8080/tasks/epic");
+        HttpRequest.BodyPublisher body = HttpRequest.BodyPublishers.ofString(jsonEpic);
+        HttpRequest request = HttpRequest.newBuilder().uri(url).POST(body).build();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        assertEquals("POST", request.method(), "Неверный метод запроса.");
+        assertEquals(200, response.statusCode(), "Код обработки запроса неверен.");
+
         /*Создание дополнительных подзадач для дальнейших тестов тестов */
+        url = URI.create("http://localhost:8080/tasks/subtask");
+        body = HttpRequest.BodyPublishers.ofString(jsonSubtask1);
+        request = HttpRequest.newBuilder().uri(url).POST(body).build();
+        response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        assertEquals("POST", request.method(), "Неверный метод запроса.");
+        assertEquals(200, response.statusCode(), "Код обработки запроса неверен.");
+
         url = URI.create("http://localhost:8080/tasks/subtask");
         body = HttpRequest.BodyPublishers.ofString(jsonSubtask2);
         request = HttpRequest.newBuilder().uri(url).POST(body).build();
@@ -169,6 +202,7 @@ public class HttpTaskServerTest {
         body = HttpRequest.BodyPublishers.ofString(jsonSubtask3);
         request = HttpRequest.newBuilder().uri(url).POST(body).build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
         /*Проверка обновления подзадач */
         url = URI.create("http://localhost:8080/tasks/subtask/?id=2");
         body = HttpRequest.BodyPublishers.ofString(updatedJsonSubtask1);
@@ -176,29 +210,35 @@ public class HttpTaskServerTest {
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals("POST", request.method(), "Неверный метод запроса.");
         assertEquals(200, response.statusCode(), "Код обработки запроса неверен.");
+
         /*Проверка удаления подзадачи по id */
         url = URI.create("http://localhost:8080/tasks/subtask/?id=2");
         request = HttpRequest.newBuilder().uri(url).DELETE().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals("DELETE", request.method(), "Неверный метод запроса.");
         assertEquals(200, response.statusCode(), "Код обработки запроса неверен.");
+
         /*Проверка удаления всех подзадач*/
         url = URI.create("http://localhost:8080/tasks/subtask");
         request = HttpRequest.newBuilder().uri(url).DELETE().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals("DELETE", request.method(), "Неверный метод запроса.");
         assertEquals(200, response.statusCode(), "Код обработки запроса неверен.");
+
         /*Проверка удаления эпика по id*/
         url = URI.create("http://localhost:8080/tasks/epic/?id=1");
         request = HttpRequest.newBuilder().uri(url).DELETE().build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals("DELETE", request.method(), "Неверный метод запроса.");
         assertEquals(200, response.statusCode(), "Код обработки запроса неверен.");
+        /*Задал вопрос о целесообразности в slack отдельных методов для request и response */
+
         /*Создание эпика для проверки удаления*/
         url = URI.create("http://localhost:8080/tasks/epic");
         body = HttpRequest.BodyPublishers.ofString(jsonEpic);
         request = HttpRequest.newBuilder().uri(url).POST(body).build();
         response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
         /*Проверка удаления всех эпиков*/
         url = URI.create("http://localhost:8080/tasks/epic");
         request = HttpRequest.newBuilder().uri(url).DELETE().build();
