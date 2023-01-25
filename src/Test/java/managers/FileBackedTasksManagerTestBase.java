@@ -29,7 +29,6 @@ public class FileBackedTasksManagerTestBase extends BaseTaskManagerTest<FileBack
                 DAY_3, Duration.ofMinutes(1439));
         subtask3 = new Subtask("Подзадача эпика-3", "описание", 1, Task.Status.DONE, 0,
                 DAY_4, Duration.ofMinutes(1439));
-
     }
 
     @Test

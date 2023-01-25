@@ -59,17 +59,9 @@ public class HttpTaskServer {
         server.createContext("/tasks", this::handlePrioritizedTasks);
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         HttpTaskServer httpUserServer;
-        try {
-            httpUserServer = new HttpTaskServer(new FileBackedTasksManager("taskManager.csv"));
-        } catch (IOException e) {
-            System.out.println("Ошибка" + Arrays.toString(e.getStackTrace()) + e.getMessage());
-            /*Еще не понял как реализовать отправку кода ошибка и логирование исключения в случае IOException e,
-            задал вопрос в группе, чтобы не терять время(дедлайн поджимает) отправляю на проверку с исправлением
-            обязательных проблем*/
-            throw new RuntimeException(e);
-        }
+        httpUserServer = new HttpTaskServer(new FileBackedTasksManager("taskManager.csv"));
         httpUserServer.start();
     }
 
