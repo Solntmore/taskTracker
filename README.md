@@ -1,4 +1,4 @@
-# java-kanban
+# Task tracker on Java core
 
 Стек: Java 11
 
